@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-const Header = ({ title, user }) => {
+const Header = ({ title, user, toggleSidebar }) => {
     const [showNotifications, setShowNotifications] = useState(false)
     const [showUserMenu, setShowUserMenu] = useState(false)
 
@@ -15,7 +15,12 @@ const Header = ({ title, user }) => {
 
     return (
         <header className="dashboard-header">
-            <h1>{title}</h1>
+            <div className="header-left">
+                <button className="mobile-sidebar-toggle" onClick={toggleSidebar}>
+                    ☰
+                </button>
+                <h1>{title}</h1>
+            </div>
 
             <div className="header-actions">
                 <div className="notification-container">

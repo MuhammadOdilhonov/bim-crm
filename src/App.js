@@ -6,6 +6,14 @@ import NotFound from "./pages/NotFound"
 import ProtectedRoute from "./components/ProtectedRoute"
 import { AuthProvider } from "./context/AuthContext"
 
+// Import individual pages for direct routing
+import Overview from "./pages/superDirector/Overview"
+import Clinics from "./pages/superDirector/Clinics"
+import ClinicDetails from "./pages/superDirector/ClinicDetails"
+import Requests from "./pages/superDirector/Requests"
+import ApiIssues from "./pages/superDirector/ApiIssues"
+import ClientRequests from "./pages/superAdmin/ClientRequests"
+
 function App() {
   return (
     <AuthProvider>
@@ -13,22 +21,35 @@ function App() {
         <div className="App">
           <Routes>
             <Route path="/login" element={<Login />} />
+
+            {/* SuperDirector Routes */}
             <Route
-              path="/super-director/*"
+              path="/super-director"
               element={
                 <ProtectedRoute allowedRoles={["SuperDirector"]}>
                   <SuperDirectorDashboard />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<Overview />} />
+              <Route path="clinics" element={<Clinics />} />
+              <Route path="clinics/:id" element={<ClinicDetails />} />
+              <Route path="requests" element={<Requests />} />
+              <Route path="api-issues" element={<ApiIssues />} />
+            </Route>
+
+            {/* SuperAdmin Routes */}
             <Route
-              path="/super-admin/*"
+              path="/super-admin"
               element={
                 <ProtectedRoute allowedRoles={["SuperAdmin"]}>
                   <SuperAdminDashboard />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<ClientRequests />} />
+            </Route>
+
             <Route path="/" element={<Navigate to="/login" />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

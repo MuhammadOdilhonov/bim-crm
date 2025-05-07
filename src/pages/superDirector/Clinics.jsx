@@ -19,6 +19,13 @@ const Clinics = () => {
         return matchesSearch && matchesStatus
     })
 
+    // Format storage function
+    const formatStorage = (storage) => {
+        if (storage.tb > 0) return `${storage.tb} TB`
+        if (storage.gb > 0) return `${storage.gb} GB`
+        return `${storage.mb} MB`
+    }
+
     return (
         <div className="clinics-page">
             <div className="dashboard-card">
@@ -55,8 +62,8 @@ const Clinics = () => {
                             <tr>
                                 <th>Klinika nomi</th>
                                 <th>Direktor</th>
-                                <th>Filiallar soni</th>
-                                <th>Xodimlar soni</th>
+                                <th>Filiallar</th>
+                                <th>Xodimlar</th>
                                 <th>Tarif</th>
                                 <th>Saqlash hajmi</th>
                                 <th>Obuna davri</th>
@@ -66,20 +73,65 @@ const Clinics = () => {
                         </thead>
                         <tbody>
                             {filteredClinics.map((clinic) => (
-                                <tr key={clinic.id}>
-                                    <td>{clinic.name}</td>
+                                <tr key={clinic.id} className={clinic.hasIssues ? "has-issues" : ""}>
+                                    <td>
+                                        <div className="clinic-name">
+                                            {clinic.name}
+                                            {clinic.hasIssues && (
+                                                <span className="issue-badge" title="API muammolari mavjud">
+                                                    ⚠️
+                                                </span>
+                                            )}
+                                            {clinic.isTrial && (
+                                                <span className="trial-badge" title="Sinov muddati">
+                                                    🆓
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td>{clinic.director}</td>
                                     <td>{clinic.branches.length}</td>
-                                    <td>{clinic.staff.total}</td>
-                                    <td>{clinic.tariff}</td>
                                     <td>
-                                        {clinic.storageAllocated.tb > 0 ? `${clinic.storageAllocated.tb} TB` : ""}
-                                        {clinic.storageAllocated.gb > 0 ? `${clinic.storageAllocated.gb} GB` : ""}
-                                        {clinic.storageAllocated.mb > 0 ? `${clinic.storageAllocated.mb} MB` : ""}
+                                        <div className="staff-count">
+                                            <span title="Jami xodimlar">{clinic.staff.total}</span>
+                                            <div className="staff-details">
+                                                <span title="Shifokorlar">👨‍⚕️ {clinic.staff.doctors}</span>
+                                                <span title="Administratorlar">👨‍💼 {clinic.staff.admins}</span>
+                                                <span title="Hamshiralar">👩‍⚕️ {clinic.staff.nurses}</span>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>
-                                        {new Date(clinic.subscriptionStart).toLocaleDateString()} -{" "}
-                                        {new Date(clinic.subscriptionEnd).toLocaleDateString()}
+                                        <span className="tariff-badge">{clinic.tariff}</span>
+                                    </td>
+                                    <td>
+                                        <div className="storage-info">
+                                            <div className="storage-bar">
+                                                <div
+                                                    className="storage-used"
+                                                    style={{
+                                                        width: `${((clinic.storageUsed.tb * 1024 * 1024 +
+                                                                clinic.storageUsed.gb * 1024 +
+                                                                clinic.storageUsed.mb) /
+                                                                (clinic.storageAllocated.tb * 1024 * 1024 +
+                                                                    clinic.storageAllocated.gb * 1024 +
+                                                                    clinic.storageAllocated.mb)) *
+                                                            100
+                                                            }%`,
+                                                    }}
+                                                ></div>
+                                            </div>
+                                            <div className="storage-text">
+                                                {formatStorage(clinic.storageUsed)} / {formatStorage(clinic.storageAllocated)}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="subscription-period">
+                                            <div>{new Date(clinic.subscriptionStart).toLocaleDateString()}</div>
+                                            <div>-</div>
+                                            <div>{new Date(clinic.subscriptionEnd).toLocaleDateString()}</div>
+                                        </div>
                                     </td>
                                     <td>
                                         <span className={`status ${clinic.status}`}>
@@ -97,34 +149,6 @@ const Clinics = () => {
                     </table>
                 </div>
             </div>
-
-            <style jsx>{`
-        .filters {
-          display: flex;
-          gap: 15px;
-          margin-bottom: 20px;
-        }
-        
-        .search-box {
-          flex: 1;
-        }
-        
-        .search-box input {
-          width: 100%;
-          padding: 10px 15px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          font-size: 14px;
-        }
-        
-        .status-filter select {
-          padding: 10px 15px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          font-size: 14px;
-          background-color: white;
-        }
-      `}</style>
         </div>
     )
 }

@@ -122,27 +122,6 @@ const ApiIssues = () => {
                     </table>
                 </div>
             </div>
-
-            <style jsx>{`
-        .filters {
-          display: flex;
-          justify-content: flex-end;
-          margin-bottom: 20px;
-        }
-        
-        .status-filter select {
-          padding: 10px 15px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          font-size: 14px;
-          background-color: white;
-        }
-        
-        .action-buttons {
-          display: flex;
-          gap: 5px;
-        }
-      `}</style>
         </div>
     )
 }

@@ -1,11 +1,9 @@
 "use client"
 
 import { NavLink, useNavigate } from "react-router-dom"
-import { useState } from "react"
 import { useAuth } from "../context/AuthContext"
 
-const Sidebar = ({ routes }) => {
-    const [collapsed, setCollapsed] = useState(false)
+const Sidebar = ({ routes, collapsed, toggleSidebar }) => {
     const { currentUser, logout } = useAuth()
     const navigate = useNavigate()
 
@@ -18,7 +16,7 @@ const Sidebar = ({ routes }) => {
         <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
             <div className="sidebar-header">
                 <h2 className="logo">Med CRM</h2>
-                <button className="toggle-btn" onClick={() => setCollapsed(!collapsed)}>
+                <button className="toggle-btn" onClick={toggleSidebar}>
                     {collapsed ? "→" : "←"}
                 </button>
             </div>
@@ -37,7 +35,11 @@ const Sidebar = ({ routes }) => {
                 <ul>
                     {routes.map((route, index) => (
                         <li key={index}>
-                            <NavLink to={route.path} className={({ isActive }) => (isActive ? "active" : "")}>
+                            <NavLink
+                                to={route.path}
+                                end={route.path.split("/").length <= 2}
+                                className={({ isActive }) => (isActive ? "active" : "")}
+                            >
                                 <span className="icon">{route.icon}</span>
                                 {!collapsed && <span className="label">{route.name}</span>}
                             </NavLink>

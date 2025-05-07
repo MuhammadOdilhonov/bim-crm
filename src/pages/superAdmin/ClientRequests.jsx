@@ -1,12 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect} from "react"
 import { mockRequests } from "../../data/mockData"
 
 const ClientRequests = () => {
     const [requests, setRequests] = useState(mockRequests)
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
+    useEffect(() => {
+        
+        console.log("ClientRequests component mounted");
+        
+    }, []);
 
     const filteredRequests = requests.filter((request) => {
         const matchesSearch =
@@ -111,39 +116,6 @@ const ClientRequests = () => {
                     </table>
                 </div>
             </div>
-
-            <style jsx>{`
-        .filters {
-          display: flex;
-          gap: 15px;
-          margin-bottom: 20px;
-        }
-        
-        .search-box {
-          flex: 1;
-        }
-        
-        .search-box input {
-          width: 100%;
-          padding: 10px 15px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          font-size: 14px;
-        }
-        
-        .status-filter select {
-          padding: 10px 15px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          font-size: 14px;
-          background-color: white;
-        }
-        
-        .action-buttons {
-          display: flex;
-          gap: 5px;
-        }
-      `}</style>
         </div>
     )
 }

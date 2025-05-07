@@ -1,17 +1,20 @@
-import { Routes, Route } from "react-router-dom"
+"use client"
+
+import { useEffect } from "react"
+import { useLocation } from "react-router-dom"
 import DashboardLayout from "../../components/DashboardLayout"
-import ClientRequests from "./ClientRequests"
 
 const SuperAdminDashboard = () => {
-    const routes = [{ name: "Mijoz so'rovlari", path: "", icon: "📨" }]
+    const location = useLocation()
 
-    return (
-        <DashboardLayout title="Super Admin Panel" routes={routes}>
-            <Routes>
-                <Route path="/" element={<ClientRequests />} />
-            </Routes>
-        </DashboardLayout>
-    )
+    useEffect(() => {
+        console.log("SuperAdminDashboard mounted")
+        console.log("Current path in SuperAdminDashboard:", location.pathname)
+    }, [location])
+
+    const routes = [{ name: "Mijoz so'rovlari", path: "/super-admin", icon: "📨" }]
+
+    return <DashboardLayout title="Super Admin Panel" routes={routes} />
 }
 
 export default SuperAdminDashboard

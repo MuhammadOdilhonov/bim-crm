@@ -171,6 +171,117 @@ const Overview = () => {
                     </div>
                 </div>
 
+                {/* Storage Summary */}
+                <div className="grid-col-6">
+                    <div className="dashboard-card">
+                        <div className="card-header">
+                            <h2>Saqlash hajmi</h2>
+                        </div>
+                        <div className="card-body">
+                            <div className="storage-info">
+                                <div className="storage-usage">
+                                    <div className="usage-label">Ishlatilgan</div>
+                                    <div className="usage-bar">
+                                        <div
+                                            className="usage-progress"
+                                            style={{
+                                                width: `${((statistics.usedStorage.tb * 1024 * 1024 +
+                                                        statistics.usedStorage.gb * 1024 +
+                                                        statistics.usedStorage.mb) /
+                                                        (statistics.totalStorage.tb * 1024 * 1024 +
+                                                            statistics.totalStorage.gb * 1024 +
+                                                            statistics.totalStorage.mb)) *
+                                                    100
+                                                    }%`,
+                                            }}
+                                        ></div>
+                                    </div>
+                                    <div className="usage-value">
+                                        {statistics.usedStorage.tb > 0 ? `${statistics.usedStorage.tb} TB ` : ""}
+                                        {statistics.usedStorage.gb > 0 ? `${statistics.usedStorage.gb} GB ` : ""}
+                                        {statistics.usedStorage.mb > 0 ? `${statistics.usedStorage.mb} MB` : ""}
+                                    </div>
+                                </div>
+
+                                <div className="storage-details">
+                                    <div className="storage-item">
+                                        <div className="storage-label">Ajratilgan hajm</div>
+                                        <div className="storage-value">
+                                            {statistics.totalStorage.tb > 0 ? `${statistics.totalStorage.tb} TB ` : ""}
+                                            {statistics.totalStorage.gb > 0 ? `${statistics.totalStorage.gb} GB ` : ""}
+                                            {statistics.totalStorage.mb > 0 ? `${statistics.totalStorage.mb} MB` : ""}
+                                        </div>
+                                    </div>
+                                    <div className="storage-item">
+                                        <div className="storage-label">Bo'sh joy</div>
+                                        <div className="storage-value">
+                                            {(
+                                                statistics.totalStorage.gb +
+                                                statistics.totalStorage.tb * 1024 -
+                                                statistics.usedStorage.gb -
+                                                statistics.usedStorage.tb * 1024
+                                            ).toFixed(1)}{" "}
+                                            GB
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Staff and Patients Summary */}
+                <div className="grid-col-6">
+                    <div className="dashboard-card">
+                        <div className="card-header">
+                            <h2>Xodimlar va bemorlar</h2>
+                        </div>
+                        <div className="card-body">
+                            <div className="staff-patients-summary">
+                                <div className="summary-section">
+                                    <h3>Xodimlar</h3>
+                                    <div className="summary-grid">
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.totalStaff.doctors}</div>
+                                            <div className="summary-label">Shifokorlar</div>
+                                        </div>
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.totalStaff.admins}</div>
+                                            <div className="summary-label">Administratorlar</div>
+                                        </div>
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.totalStaff.nurses}</div>
+                                            <div className="summary-label">Hamshiralar</div>
+                                        </div>
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.totalStaff.total}</div>
+                                            <div className="summary-label">Jami</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="summary-section">
+                                    <h3>Bemorlar</h3>
+                                    <div className="summary-grid">
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.totalPatients}</div>
+                                            <div className="summary-label">Jami</div>
+                                        </div>
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.monthlyPatientVisits}</div>
+                                            <div className="summary-label">Oylik tashriflar</div>
+                                        </div>
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.yearlyPatientVisits}</div>
+                                            <div className="summary-label">Yillik tashriflar</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Recent Clinics */}
                 <div className="grid-col-12">
                     <div className="dashboard-card">
@@ -196,7 +307,21 @@ const Overview = () => {
                                 <tbody>
                                     {recentClinics.map((clinic) => (
                                         <tr key={clinic.id}>
-                                            <td>{clinic.name}</td>
+                                            <td>
+                                                <div className="clinic-name">
+                                                    {clinic.name}
+                                                    {clinic.hasIssues && (
+                                                        <span className="issue-badge" title="API muammolari mavjud">
+                                                            ⚠️
+                                                        </span>
+                                                    )}
+                                                    {clinic.isTrial && (
+                                                        <span className="trial-badge" title="Sinov muddati">
+                                                            🆓
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td>{clinic.director}</td>
                                             <td>{clinic.branches.length}</td>
                                             <td>{clinic.tariff}</td>
@@ -226,111 +351,6 @@ const Overview = () => {
                     </div>
                 </div>
             </div>
-
-            <style jsx>{`
-        .status-chart {
-          display: flex;
-          flex-direction: column;
-          gap: 15px;
-        }
-        
-        .status-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        
-        .status-label {
-          width: 100px;
-          font-size: 14px;
-        }
-        
-        .status-bar {
-          flex: 1;
-          height: 10px;
-          background-color: #f1f1f1;
-          border-radius: 5px;
-          overflow: hidden;
-        }
-        
-        .status-progress {
-          height: 100%;
-          border-radius: 5px;
-        }
-        
-        .status-progress.active {
-          background-color: #2ecc71;
-        }
-        
-        .status-progress.pending {
-          background-color: #f1c40f;
-        }
-        
-        .status-progress.inactive {
-          background-color: #e74c3c;
-        }
-        
-        .status-value {
-          width: 30px;
-          text-align: right;
-          font-weight: 600;
-        }
-        
-        .financial-summary {
-          display: flex;
-          flex-direction: column;
-          gap: 15px;
-        }
-        
-        .financial-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        
-        .financial-label {
-          font-size: 14px;
-        }
-        
-        .financial-value {
-          font-weight: 600;
-        }
-        
-        .financial-value.profit {
-          color: #2ecc71;
-        }
-        
-        .financial-chart {
-          margin-top: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-        }
-        
-        .chart-bar {
-          height: 20px;
-          background-color: #f1f1f1;
-          border-radius: 5px;
-          overflow: hidden;
-        }
-        
-        .chart-segment {
-          height: 100%;
-          border-radius: 5px;
-        }
-        
-        .chart-segment.revenue {
-          background-color: #3498db;
-        }
-        
-        .chart-segment.cost {
-          background-color: #e74c3c;
-        }
-        
-        .chart-segment.profit {
-          background-color: #2ecc71;
-        }
-      `}</style>
         </div>
     )
 }
