@@ -69,13 +69,13 @@ const Header = ({ title, user, toggleSidebar }) => {
                         <div className="user-dropdown">
                             <ul>
                                 <li>
-                                    <a href="#">Profil</a>
+                                    <button className="dropdown-link">Profil</button>
                                 </li>
                                 <li>
-                                    <a href="#">Sozlamalar</a>
+                                    <button className="dropdown-link">Sozlamalar</button>
                                 </li>
                                 <li>
-                                    <a href="#">Yordam</a>
+                                    <button className="dropdown-link">Yordam</button>
                                 </li>
                             </ul>
                         </div>

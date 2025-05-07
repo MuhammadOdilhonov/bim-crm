@@ -5,10 +5,12 @@ import { Link } from "react-router-dom"
 import { mockStatistics, mockClinics } from "../../data/mockData"
 
 const Overview = () => {
-    const [statistics, setStatistics] = useState(mockStatistics)
+    const [statistics] = useState(mockStatistics)
     const [recentClinics, setRecentClinics] = useState([])
 
     useEffect(() => {
+        console.log("Overview component mounted")
+
         // Sort clinics by subscription start date (newest first)
         const sortedClinics = [...mockClinics]
             .sort((a, b) => new Date(b.subscriptionStart) - new Date(a.subscriptionStart))
@@ -19,6 +21,8 @@ const Overview = () => {
 
     return (
         <div className="overview-page">
+            <h1 style={{ marginBottom: "20px" }}>Umumiy ko'rinish</h1>
+
             <div className="dashboard-grid">
                 {/* Stats Row */}
                 <div className="grid-col-3">

@@ -1,13 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { mockClinics } from "../../data/mockData"
 
 const Clinics = () => {
-    const [clinics, setClinics] = useState(mockClinics)
+    const [clinics] = useState(mockClinics)
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
+
+    useEffect(() => {
+        console.log("Clinics component mounted")
+    }, [])
 
     const filteredClinics = clinics.filter((clinic) => {
         const matchesSearch =
@@ -28,6 +32,8 @@ const Clinics = () => {
 
     return (
         <div className="clinics-page">
+            <h1 style={{ marginBottom: "20px" }}>Klinikalar</h1>
+
             <div className="dashboard-card">
                 <div className="card-header">
                     <h2>Klinikalar ro'yxati</h2>
