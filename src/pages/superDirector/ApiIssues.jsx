@@ -1,11 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { mockApiIssues, mockClinics } from "../../data/mockData"
+import Pagination from "../../components/Pagination"
 
 const ApiIssues = () => {
     const [issues, setIssues] = useState(mockApiIssues)
     const [statusFilter, setStatusFilter] = useState("all")
+    const [currentPage, setCurrentPage] = useState(0)
+    const [itemsPerPage] = useState(5)
+
+    useEffect(() => {
+        console.log("ApiIssues component mounted")
+    }, [])
 
     // Get clinic names for display
     const getClinicName = (clinicId) => {
@@ -17,6 +24,11 @@ const ApiIssues = () => {
         return statusFilter === "all" || issue.status === statusFilter
     })
 
+    // Get current items for pagination
+    const indexOfLastItem = (currentPage + 1) * itemsPerPage
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage
+    const currentItems = filteredIssues.slice(indexOfFirstItem, indexOfLastItem)
+
     const handleStatusChange = (id, newStatus) => {
         setIssues(
             issues.map((issue) =>
@@ -27,8 +39,14 @@ const ApiIssues = () => {
         )
     }
 
+    const handlePageChange = (selectedPage) => {
+        setCurrentPage(selectedPage)
+    }
+
     return (
         <div className="api-issues-page">
+            <h1 style={{ marginBottom: "20px" }}>API muammolari</h1>
+
             <div className="dashboard-card">
                 <div className="card-header">
                     <h2>API muammolari</h2>
@@ -60,7 +78,7 @@ const ApiIssues = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredIssues.map((issue) => (
+                            {currentItems.map((issue) => (
                                 <tr key={issue.id}>
                                     <td>{getClinicName(issue.clinicId)}</td>
                                     <td>{issue.apiName}</td>
@@ -120,6 +138,13 @@ const ApiIssues = () => {
                             ))}
                         </tbody>
                     </table>
+
+                    <Pagination
+                        itemsPerPage={itemsPerPage}
+                        totalItems={filteredIssues.length}
+                        currentPage={currentPage}
+                        onPageChange={handlePageChange}
+                    />
                 </div>
             </div>
         </div>

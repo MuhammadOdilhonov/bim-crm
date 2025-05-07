@@ -1,12 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
 import { mockClinics } from "../../data/mockData"
 import Modal from "../../components/Modal"
 import Pagination from "../../components/Pagination"
 
-const Clinics = () => {
+const AdminClinics = () => {
     const [clinics, setClinics] = useState(mockClinics)
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
@@ -24,7 +23,7 @@ const Clinics = () => {
     const [itemsPerPage] = useState(5)
 
     useEffect(() => {
-        console.log("Clinics component mounted")
+        console.log("AdminClinics component mounted")
     }, [])
 
     const filteredClinics = clinics.filter((clinic) => {
@@ -238,9 +237,7 @@ const Clinics = () => {
                                         </span>
                                     </td>
                                     <td>
-                                        <Link to={`/super-director/clinics/${clinic.id}`} className="btn btn-sm btn-secondary">
-                                            Batafsil
-                                        </Link>
+                                        <button className="btn btn-sm btn-secondary">Batafsil</button>
                                     </td>
                                 </tr>
                             ))}
@@ -364,4 +361,4 @@ const Clinics = () => {
     )
 }
 
-export default Clinics
+export default AdminClinics

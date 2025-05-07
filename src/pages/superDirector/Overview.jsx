@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { mockStatistics, mockClinics } from "../../data/mockData"
+import { mockStatistics, mockClinics, mockRequests, mockApiIssues } from "../../data/mockData"
 
 const Overview = () => {
     const [statistics] = useState(mockStatistics)
     const [recentClinics, setRecentClinics] = useState([])
+    const [recentRequests, setRecentRequests] = useState([])
+    const [activeIssues, setActiveIssues] = useState([])
 
     useEffect(() => {
         console.log("Overview component mounted")
@@ -17,6 +19,18 @@ const Overview = () => {
             .slice(0, 3)
 
         setRecentClinics(sortedClinics)
+
+        // Get recent requests
+        const sortedRequests = [...mockRequests].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3)
+
+        setRecentRequests(sortedRequests)
+
+        // Get active API issues
+        const filteredIssues = mockApiIssues.filter(
+            (issue) => issue.status === "investigating" || issue.status === "in progress",
+        )
+
+        setActiveIssues(filteredIssues)
     }, [])
 
     return (
@@ -82,6 +96,9 @@ const Overview = () => {
                     <div className="dashboard-card">
                         <div className="card-header">
                             <h2>Klinikalar holati</h2>
+                            <Link to="/super-director/clinics" className="btn btn-sm btn-primary">
+                                Barchasini ko'rish
+                            </Link>
                         </div>
                         <div className="card-body">
                             <div className="status-chart">
@@ -175,6 +192,151 @@ const Overview = () => {
                     </div>
                 </div>
 
+                {/* Recent Requests */}
+                <div className="grid-col-6">
+                    <div className="dashboard-card">
+                        <div className="card-header">
+                            <h2>So'nggi so'rovlar</h2>
+                            <Link to="/super-director/requests" className="btn btn-sm btn-primary">
+                                Barchasini ko'rish
+                            </Link>
+                        </div>
+                        <div className="card-body">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sana</th>
+                                        <th>Ism</th>
+                                        <th>Klinika nomi</th>
+                                        <th>Holati</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {recentRequests.map((request) => (
+                                        <tr key={request.id}>
+                                            <td>{new Date(request.date).toLocaleDateString()}</td>
+                                            <td>{request.name}</td>
+                                            <td>{request.clinicName}</td>
+                                            <td>
+                                                <span className={`status ${request.status === "new" ? "pending" : "active"}`}>
+                                                    {request.status === "new" ? "Yangi" : "Bog'lanilgan"}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Active API Issues */}
+                <div className="grid-col-6">
+                    <div className="dashboard-card">
+                        <div className="card-header">
+                            <h2>Faol API muammolari</h2>
+                            <Link to="/super-director/api-issues" className="btn btn-sm btn-primary">
+                                Barchasini ko'rish
+                            </Link>
+                        </div>
+                        <div className="card-body">
+                            {activeIssues.length > 0 ? (
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>API nomi</th>
+                                            <th>Muammo</th>
+                                            <th>Holati</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {activeIssues.map((issue) => (
+                                            <tr key={issue.id}>
+                                                <td>{issue.apiName}</td>
+                                                <td>{issue.issue}</td>
+                                                <td>
+                                                    <span
+                                                        className={`status ${issue.status === "resolved"
+                                                                ? "active"
+                                                                : issue.status === "investigating"
+                                                                    ? "pending"
+                                                                    : "inactive"
+                                                            }`}
+                                                    >
+                                                        {issue.status === "investigating"
+                                                            ? "Tekshirilmoqda"
+                                                            : issue.status === "in progress"
+                                                                ? "Jarayonda"
+                                                                : issue.status === "resolved"
+                                                                    ? "Hal qilingan"
+                                                                    : issue.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <div className="empty-state">
+                                    <p>Hozirda faol API muammolari yo'q</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Staff and Patients Summary */}
+                <div className="grid-col-6">
+                    <div className="dashboard-card">
+                        <div className="card-header">
+                            <h2>Xodimlar va bemorlar</h2>
+                        </div>
+                        <div className="card-body">
+                            <div className="staff-patients-summary">
+                                <div className="summary-section">
+                                    <h3>Xodimlar</h3>
+                                    <div className="summary-grid">
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.totalStaff.doctors}</div>
+                                            <div className="summary-label">Shifokorlar</div>
+                                        </div>
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.totalStaff.admins}</div>
+                                            <div className="summary-label">Administratorlar</div>
+                                        </div>
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.totalStaff.nurses}</div>
+                                            <div className="summary-label">Hamshiralar</div>
+                                        </div>
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.totalStaff.total}</div>
+                                            <div className="summary-label">Jami</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="summary-section">
+                                    <h3>Bemorlar</h3>
+                                    <div className="summary-grid">
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.totalPatients}</div>
+                                            <div className="summary-label">Jami</div>
+                                        </div>
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.monthlyPatientVisits}</div>
+                                            <div className="summary-label">Oylik tashriflar</div>
+                                        </div>
+                                        <div className="summary-item">
+                                            <div className="summary-value">{statistics.yearlyPatientVisits}</div>
+                                            <div className="summary-label">Yillik tashriflar</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Storage Summary */}
                 <div className="grid-col-6">
                     <div className="dashboard-card">
@@ -226,58 +388,6 @@ const Overview = () => {
                                                 statistics.usedStorage.tb * 1024
                                             ).toFixed(1)}{" "}
                                             GB
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Staff and Patients Summary */}
-                <div className="grid-col-6">
-                    <div className="dashboard-card">
-                        <div className="card-header">
-                            <h2>Xodimlar va bemorlar</h2>
-                        </div>
-                        <div className="card-body">
-                            <div className="staff-patients-summary">
-                                <div className="summary-section">
-                                    <h3>Xodimlar</h3>
-                                    <div className="summary-grid">
-                                        <div className="summary-item">
-                                            <div className="summary-value">{statistics.totalStaff.doctors}</div>
-                                            <div className="summary-label">Shifokorlar</div>
-                                        </div>
-                                        <div className="summary-item">
-                                            <div className="summary-value">{statistics.totalStaff.admins}</div>
-                                            <div className="summary-label">Administratorlar</div>
-                                        </div>
-                                        <div className="summary-item">
-                                            <div className="summary-value">{statistics.totalStaff.nurses}</div>
-                                            <div className="summary-label">Hamshiralar</div>
-                                        </div>
-                                        <div className="summary-item">
-                                            <div className="summary-value">{statistics.totalStaff.total}</div>
-                                            <div className="summary-label">Jami</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="summary-section">
-                                    <h3>Bemorlar</h3>
-                                    <div className="summary-grid">
-                                        <div className="summary-item">
-                                            <div className="summary-value">{statistics.totalPatients}</div>
-                                            <div className="summary-label">Jami</div>
-                                        </div>
-                                        <div className="summary-item">
-                                            <div className="summary-value">{statistics.monthlyPatientVisits}</div>
-                                            <div className="summary-label">Oylik tashriflar</div>
-                                        </div>
-                                        <div className="summary-item">
-                                            <div className="summary-value">{statistics.yearlyPatientVisits}</div>
-                                            <div className="summary-label">Yillik tashriflar</div>
                                         </div>
                                     </div>
                                 </div>

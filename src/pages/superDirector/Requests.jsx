@@ -1,12 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { mockRequests } from "../../data/mockData"
+import Modal from "../../components/Modal"
+import Pagination from "../../components/Pagination"
 
 const Requests = () => {
     const [requests, setRequests] = useState(mockRequests)
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
+    const [isContactedModalOpen, setIsContactedModalOpen] = useState(false)
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+    const [selectedRequest, setSelectedRequest] = useState(null)
+    const [contactResult, setContactResult] = useState("")
+    const [currentPage, setCurrentPage] = useState(0)
+    const [itemsPerPage] = useState(5)
+
+    useEffect(() => {
+        console.log("Requests component mounted")
+    }, [])
 
     const filteredRequests = requests.filter((request) => {
         const matchesSearch =
@@ -19,12 +31,49 @@ const Requests = () => {
         return matchesSearch && matchesStatus
     })
 
+    // Get current items for pagination
+    const indexOfLastItem = (currentPage + 1) * itemsPerPage
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage
+    const currentItems = filteredRequests.slice(indexOfFirstItem, indexOfLastItem)
+
     const handleStatusChange = (id, newStatus) => {
-        setRequests(requests.map((request) => (request.id === id ? { ...request, status: newStatus } : request)))
+        if (newStatus === "contacted") {
+            const request = requests.find((r) => r.id === id)
+            setSelectedRequest(request)
+            setIsContactedModalOpen(true)
+        } else {
+            setRequests(requests.map((request) => (request.id === id ? { ...request, status: newStatus } : request)))
+        }
+    }
+
+    const handleContactSubmit = () => {
+        if (!contactResult.trim()) {
+            alert("Iltimos, natija haqida ma'lumot kiriting")
+            return
+        }
+
+        setRequests(
+            requests.map((request) =>
+                request.id === selectedRequest.id ? { ...request, status: "contacted", contactResult: contactResult } : request,
+            ),
+        )
+        setIsContactedModalOpen(false)
+        setContactResult("")
+    }
+
+    const handleViewRequest = (request) => {
+        setSelectedRequest(request)
+        setIsViewModalOpen(true)
+    }
+
+    const handlePageChange = (selectedPage) => {
+        setCurrentPage(selectedPage)
     }
 
     return (
         <div className="requests-page">
+            <h1 style={{ marginBottom: "20px" }}>So'rovlar</h1>
+
             <div className="dashboard-card">
                 <div className="card-header">
                     <h2>Yangi so'rovlar</h2>
@@ -63,7 +112,7 @@ const Requests = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredRequests.map((request) => (
+                            {currentItems.map((request) => (
                                 <tr key={request.id}>
                                     <td>{new Date(request.date).toLocaleDateString()}</td>
                                     <td>{request.name}</td>
@@ -77,13 +126,7 @@ const Requests = () => {
                                     </td>
                                     <td>
                                         <div className="action-buttons">
-                                            <button
-                                                className="btn btn-sm btn-secondary"
-                                                onClick={() => {
-                                                    // Show request details
-                                                    alert(`Xabar: ${request.message}`)
-                                                }}
-                                            >
+                                            <button className="btn btn-sm btn-secondary" onClick={() => handleViewRequest(request)}>
                                                 Ko'rish
                                             </button>
 
@@ -108,8 +151,94 @@ const Requests = () => {
                             ))}
                         </tbody>
                     </table>
+
+                    <Pagination
+                        itemsPerPage={itemsPerPage}
+                        totalItems={filteredRequests.length}
+                        currentPage={currentPage}
+                        onPageChange={handlePageChange}
+                    />
                 </div>
             </div>
+
+            {/* Contacted Modal */}
+            <Modal isOpen={isContactedModalOpen} onClose={() => setIsContactedModalOpen(false)} title="Bog'lanish natijasi">
+                <div className="modal-form">
+                    <div className="form-group">
+                        <label htmlFor="contactResult">Bog'lanish natijasi</label>
+                        <textarea
+                            id="contactResult"
+                            value={contactResult}
+                            onChange={(e) => setContactResult(e.target.value)}
+                            placeholder="Mijoz bilan bog'lanish natijasini kiriting..."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div className="form-actions">
+                        <button className="btn btn-secondary" onClick={() => setIsContactedModalOpen(false)}>
+                            Bekor qilish
+                        </button>
+                        <button className="btn btn-primary" onClick={handleContactSubmit}>
+                            Saqlash
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* View Request Modal */}
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="So'rov ma'lumotlari">
+                {selectedRequest && (
+                    <div className="view-request-details">
+                        <div className="request-info">
+                            <div className="info-item">
+                                <div className="info-label">Ism:</div>
+                                <div className="info-value">{selectedRequest.name}</div>
+                            </div>
+                            <div className="info-item">
+                                <div className="info-label">Email:</div>
+                                <div className="info-value">{selectedRequest.email}</div>
+                            </div>
+                            <div className="info-item">
+                                <div className="info-label">Telefon:</div>
+                                <div className="info-value">{selectedRequest.phone}</div>
+                            </div>
+                            <div className="info-item">
+                                <div className="info-label">Klinika nomi:</div>
+                                <div className="info-value">{selectedRequest.clinicName}</div>
+                            </div>
+                            <div className="info-item">
+                                <div className="info-label">Sana:</div>
+                                <div className="info-value">{new Date(selectedRequest.date).toLocaleDateString()}</div>
+                            </div>
+                            <div className="info-item">
+                                <div className="info-label">Holati:</div>
+                                <div className="info-value">
+                                    <span className={`status ${selectedRequest.status === "new" ? "pending" : "active"}`}>
+                                        {selectedRequest.status === "new" ? "Yangi" : "Bog'lanilgan"}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4>Xabar:</h4>
+                        <div className="request-message">{selectedRequest.message}</div>
+
+                        {selectedRequest.contactResult && (
+                            <>
+                                <h4>Bog'lanish natijasi:</h4>
+                                <div className="request-message">{selectedRequest.contactResult}</div>
+                            </>
+                        )}
+
+                        <div className="form-actions">
+                            <button className="btn btn-primary" onClick={() => setIsViewModalOpen(false)}>
+                                Yopish
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     )
 }

@@ -13,6 +13,7 @@ import ClinicDetails from "./pages/superDirector/ClinicDetails"
 import Requests from "./pages/superDirector/Requests"
 import ApiIssues from "./pages/superDirector/ApiIssues"
 import ClientRequests from "./pages/superAdmin/ClientRequests"
+import AdminClinics from "./pages/superAdmin/AdminClinics"
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
               }
             >
               <Route index element={<ClientRequests />} />
+              <Route path="clinics" element={<AdminClinics />} />
             </Route>
 
             <Route path="/" element={<Navigate to="/login" />} />

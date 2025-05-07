@@ -12,7 +12,10 @@ const SuperAdminDashboard = () => {
         console.log("Current path in SuperAdminDashboard:", location.pathname)
     }, [location])
 
-    const routes = [{ name: "Mijoz so'rovlari", path: "/super-admin", icon: "📨" }]
+    const routes = [
+        { name: "Mijoz so'rovlari", path: "/super-admin", icon: "📨" },
+        { name: "Klinikalar", path: "/super-admin/clinics", icon: "🏥" },
+    ]
 
     return <DashboardLayout title="Super Admin Panel" routes={routes} />
 }
