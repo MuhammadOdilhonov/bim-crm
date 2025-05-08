@@ -365,25 +365,20 @@ a {
                 margin: 0;
 
                 li {
-                    &:not(:last-child) {
-                        border-bottom: 1px solid #f5f5f5;
-                    }
-
-                    .dropdown-link {
+                    a {
                         display: block;
-                        width: 100%;
-                        text-align: left;
                         padding: 12px 15px;
                         color: #333;
-                        background: none;
-                        border: none;
-                        font-size: 14px;
-                        cursor: pointer;
+                        text-decoration: none;
                         transition: background-color 0.3s;
 
                         &:hover {
                             background-color: #f5f5f5;
                         }
+                    }
+
+                    &:not(:last-child) {
+                        border-bottom: 1px solid #f5f5f5;
                     }
                 }
             }
@@ -874,12 +869,376 @@ a {
     color: #666;
 }
 
-/* Empty state */
-.empty-state {
-    text-align: center;
-    padding: 30px 0;
-    color: #999;
-    font-size: 14px;
+/* Clinic details */
+.clinic-details-page {
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .breadcrumbs {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .clinic-header {
+        margin-bottom: 20px;
+    }
+
+    .clinic-info h1 {
+        margin: 0 0 10px;
+        font-size: 24px;
+    }
+
+    .clinic-meta {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .director,
+    .branches {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .trial-badge,
+    .issue-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .trial-badge {
+        background-color: rgba(241, 196, 15, 0.1);
+        color: #f1c40f;
+    }
+
+    .issue-badge {
+        background-color: rgba(231, 76, 60, 0.1);
+        color: #e74c3c;
+    }
+
+    .tabs {
+        display: flex;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 20px;
+    }
+
+    .tab {
+        padding: 10px 20px;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #666;
+        transition: all 0.3s;
+    }
+
+    .tab:hover {
+        color: #333;
+    }
+
+    .tab.active {
+        color: #3498db;
+        border-bottom-color: #3498db;
+    }
+
+    .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #f5f5f5;
+    }
+
+    .info-label {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .info-value {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .branches-stats {
+        width: 100%;
+    }
+
+    .stats-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .branch-stat-card {
+        flex: 1;
+        min-width: 300px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+
+    .branch-name {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .branch-staff,
+    .branch-patients {
+        margin-bottom: 20px;
+    }
+
+    .staff-count,
+    .patient-count {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .staff-count .count,
+    .patient-count .count {
+        font-size: 24px;
+        font-weight: 600;
+        color: #3498db;
+    }
+
+    .staff-count .label,
+    .patient-count .label {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .staff-breakdown,
+    .patient-breakdown {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .breakdown-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .breakdown-item .count {
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .breakdown-item .label {
+        font-size: 12px;
+        color: #666;
+    }
+}
+
+/* Clinics page */
+.clinics-page {
+    .clinic-name {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .issue-badge,
+    .trial-badge {
+        font-size: 14px;
+        cursor: help;
+    }
+
+    .staff-count {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .staff-details {
+        display: flex;
+        gap: 8px;
+        font-size: 12px;
+        color: #666;
+    }
+
+    .tariff-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .storage-info {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        width: 100%;
+    }
+
+    .storage-bar {
+        width: 100%;
+        height: 6px;
+        background-color: #f1f1f1;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .storage-used {
+        height: 100%;
+        background: linear-gradient(to right, #43cea2, #185a9d);
+        border-radius: 3px;
+    }
+
+    .storage-text {
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+    }
+
+    .subscription-period {
+        font-size: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+
+    tr.has-issues {
+        background-color: rgba(231, 76, 60, 0.05);
+    }
+}
+
+/* Login page */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+    padding: 20px;
+
+    .login-card {
+        width: 100%;
+        max-width: 450px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        transition: all 0.3s ease;
+
+        &:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+
+            h1 {
+                color: #185a9d;
+                font-size: 28px;
+                margin-bottom: 10px;
+            }
+
+            p {
+                color: #666;
+                font-size: 16px;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+                color: #333;
+            }
+
+            input {
+                width: 100%;
+                padding: 12px 15px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                font-size: 16px;
+                transition: border-color 0.3s;
+
+                &:focus {
+                    border-color: #43cea2;
+                    outline: none;
+                }
+            }
+        }
+
+        .error-message {
+            color: #e74c3c;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(to right, #43cea2, #185a9d);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+
+            &:hover {
+                background: linear-gradient(to right, #3ab795, #1a4f8a);
+                transform: translateY(-2px);
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+        }
+
+        .login-help {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 14px;
+            color: #666;
+
+            p {
+                margin-bottom: 10px;
+            }
+
+            ul {
+                padding-left: 20px;
+
+                li {
+                    margin-bottom: 5px;
+                }
+            }
+        }
+    }
 }
 
 /* Responsive styles */
