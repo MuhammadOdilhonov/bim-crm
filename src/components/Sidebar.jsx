@@ -12,6 +12,27 @@ const Sidebar = ({ routes, collapsed, toggleSidebar }) => {
         navigate("/login")
     }
 
+    // Determine the display role
+    const displayRole = () => {
+        if (!currentUser) return ""
+
+        // Use appRole if available, otherwise map from API role
+        return currentUser.appRole || mapApiRoleToAppRole(currentUser.role, currentUser.is_superuser)
+    }
+
+    // Helper function to map API roles to application roles
+    const mapApiRoleToAppRole = (apiRole, isSuperuser) => {
+        if (isSuperuser) {
+            if (apiRole === "doctor") {
+                return "SuperDirector"
+            } else if (apiRole === "admin") {
+                return "SuperAdmin"
+            }
+        }
+
+        return apiRole
+    }
+
     return (
         <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
             <div className="sidebar-header">
@@ -26,7 +47,7 @@ const Sidebar = ({ routes, collapsed, toggleSidebar }) => {
                 {!collapsed && (
                     <div className="user-details">
                         <h3>{currentUser?.name}</h3>
-                        <p>{currentUser?.role}</p>
+                        <p>{displayRole()}</p>
                     </div>
                 )}
             </div>

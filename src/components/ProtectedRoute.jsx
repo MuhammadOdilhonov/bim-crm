@@ -14,11 +14,16 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
         return <Navigate to="/login" />
     }
 
-    if (allowedRoles && !allowedRoles.includes(currentUser.role)) {
+    // Get the application role from the user data
+    const userRole = currentUser.appRole || mapApiRoleToAppRole(currentUser.role, currentUser.is_superuser)
+
+    console.log("ProtectedRoute - User role:", userRole, "Allowed roles:", allowedRoles)
+
+    if (allowedRoles && !allowedRoles.includes(userRole)) {
         // Redirect to appropriate dashboard based on role
-        if (currentUser.role === "SuperDirector") {
+        if (userRole === "SuperDirector") {
             return <Navigate to="/super-director" />
-        } else if (currentUser.role === "SuperAdmin") {
+        } else if (userRole === "SuperAdmin") {
             return <Navigate to="/super-admin" />
         } else {
             return <Navigate to="/login" />
@@ -26,6 +31,19 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     }
 
     return children
+}
+
+// Helper function to map API roles to application roles
+const mapApiRoleToAppRole = (apiRole, isSuperuser) => {
+    if (isSuperuser) {
+        if (apiRole === "doctor") {
+            return "SuperDirector"
+        } else if (apiRole === "admin") {
+            return "SuperAdmin"
+        }
+    }
+
+    return apiRole
 }
 
 export default ProtectedRoute

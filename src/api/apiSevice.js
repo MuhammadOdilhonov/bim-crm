@@ -11,4 +11,19 @@ const client = axios.create({
         "Content-Type": "application/json", // JSON yuborish uchun zarur header
     },
 })
-export default client;
+
+// Add request interceptor to include auth token in requests
+client.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem("medCrmToken")
+        if (token) {
+            config.headers["Authorization"] = `Bearer ${token}`
+        }
+        return config
+    },
+    (error) => {
+        return Promise.reject(error)
+    },
+)
+
+export default client

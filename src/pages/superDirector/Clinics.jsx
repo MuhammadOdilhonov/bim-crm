@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { mockClinics } from "../../data/mockData"
+import { getAllClinics } from "../../api/apiClinics"
 import Modal from "../../components/Modal"
 import Pagination from "../../components/Pagination"
 
 const Clinics = () => {
-    const [clinics, setClinics] = useState(mockClinics)
+    const [clinics, setClinics] = useState([])
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
     const [isNewClinicModalOpen, setIsNewClinicModalOpen] = useState(false)
@@ -22,31 +22,35 @@ const Clinics = () => {
     })
     const [currentPage, setCurrentPage] = useState(0)
     const [itemsPerPage] = useState(5)
+    const [totalItems, setTotalItems] = useState(0)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
 
     useEffect(() => {
-        console.log("Clinics component mounted")
-    }, [])
+        fetchClinics()
+    }, [currentPage, searchTerm, statusFilter])
 
-    const filteredClinics = clinics.filter((clinic) => {
-        const matchesSearch =
-            clinic.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            clinic.director.toLowerCase().includes(searchTerm.toLowerCase())
+    const fetchClinics = async () => {
+        setLoading(true)
+        setError(null)
 
-        const matchesStatus = statusFilter === "all" || clinic.status === statusFilter
+        try {
+            const result = await getAllClinics(currentPage + 1, itemsPerPage, searchTerm, statusFilter)
 
-        return matchesSearch && matchesStatus
-    })
-
-    // Get current items for pagination
-    const indexOfLastItem = (currentPage + 1) * itemsPerPage
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage
-    const currentItems = filteredClinics.slice(indexOfFirstItem, indexOfLastItem)
-
-    // Format storage function
-    const formatStorage = (storage) => {
-        if (storage.tb > 0) return `${storage.tb} TB`
-        if (storage.gb > 0) return `${storage.gb} GB`
-        return `${storage.mb} MB`
+            if (result.success) {
+                setClinics(result.data.results)
+                setTotalItems(result.data.count)
+            } else {
+                setError(result.error)
+                setClinics([])
+            }
+        } catch (err) {
+            console.error("Error fetching clinics:", err)
+            setError("Failed to load clinics. Please try again later.")
+            setClinics([])
+        } finally {
+            setLoading(false)
+        }
     }
 
     const handleInputChange = (e) => {
@@ -60,7 +64,6 @@ const Clinics = () => {
     const handleAddClinic = () => {
         // Create a new clinic object
         const newClinicObj = {
-            id: clinics.length + 1,
             name: newClinic.name,
             email: newClinic.email,
             phone: newClinic.phone,
@@ -121,6 +124,27 @@ const Clinics = () => {
         setCurrentPage(selectedPage)
     }
 
+    // Parse storage string to get used and allocated values
+    const parseStorage = (storageString) => {
+        try {
+            const parts = storageString.split("/").map((part) => part.trim())
+            const used = Number.parseFloat(parts[0].replace(/[^0-9.]/g, "")) || 0
+            const allocated = Number.parseFloat(parts[1].replace(/[^0-9.]/g, "")) || 0
+
+            return { used, allocated }
+        } catch (error) {
+            console.error("Error parsing storage string:", error)
+            return { used: 0, allocated: 0 }
+        }
+    }
+
+    // Map API status to UI status
+    const mapStatus = (status) => {
+        if (status === "Faol") return "active"
+        if (status === "Kutilmoqda") return "pending"
+        return "inactive"
+    }
+
     return (
         <div className="clinics-page">
             <h1 style={{ marginBottom: "20px" }}>Klinikalar</h1>
@@ -156,103 +180,84 @@ const Clinics = () => {
                         </div>
                     </div>
 
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Klinika nomi</th>
-                                <th>Direktor</th>
-                                <th>Filiallar</th>
-                                <th>Xodimlar</th>
-                                <th>Tarif</th>
-                                <th>Saqlash hajmi</th>
-                                <th>Obuna davri</th>
-                                <th>Holati</th>
-                                <th>Harakatlar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentItems.map((clinic) => (
-                                <tr key={clinic.id} className={clinic.hasIssues ? "has-issues" : ""}>
-                                    <td>
-                                        <div className="clinic-name">
-                                            {clinic.name}
-                                            {clinic.hasIssues && (
-                                                <span className="issue-badge" title="API muammolari mavjud">
-                                                    ⚠️
-                                                </span>
-                                            )}
-                                            {clinic.isTrial && (
-                                                <span className="trial-badge" title="Sinov muddati">
-                                                    🆓
-                                                </span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td>{clinic.director}</td>
-                                    <td>{clinic.branches.length}</td>
-                                    <td>
-                                        <div className="staff-count">
-                                            <span title="Jami xodimlar">{clinic.staff.total}</span>
-                                            <div className="staff-details">
-                                                <span title="Shifokorlar">👨‍⚕️ {clinic.staff.doctors}</span>
-                                                <span title="Administratorlar">👨‍💼 {clinic.staff.admins}</span>
-                                                <span title="Hamshiralar">👩‍⚕️ {clinic.staff.nurses}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span className="tariff-badge">{clinic.tariff}</span>
-                                    </td>
-                                    <td>
-                                        <div className="storage-info">
-                                            <div className="storage-bar">
-                                                <div
-                                                    className="storage-used"
-                                                    style={{
-                                                        width: `${((clinic.storageUsed.tb * 1024 * 1024 +
-                                                                clinic.storageUsed.gb * 1024 +
-                                                                clinic.storageUsed.mb) /
-                                                                (clinic.storageAllocated.tb * 1024 * 1024 +
-                                                                    clinic.storageAllocated.gb * 1024 +
-                                                                    clinic.storageAllocated.mb)) *
-                                                            100
-                                                            }%`,
-                                                    }}
-                                                ></div>
-                                            </div>
-                                            <div className="storage-text">
-                                                {formatStorage(clinic.storageUsed)} / {formatStorage(clinic.storageAllocated)}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="subscription-period">
-                                            <div>{new Date(clinic.subscriptionStart).toLocaleDateString()}</div>
-                                            <div>-</div>
-                                            <div>{new Date(clinic.subscriptionEnd).toLocaleDateString()}</div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span className={`status ${clinic.status}`}>
-                                            {clinic.status === "active" ? "Faol" : clinic.status === "pending" ? "Kutilmoqda" : "Faol emas"}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <Link to={`/super-director/clinics/${clinic.id}`} className="btn btn-sm btn-secondary">
-                                            Batafsil
-                                        </Link>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    {loading ? (
+                        <div className="loading">Ma'lumotlar yuklanmoqda...</div>
+                    ) : error ? (
+                        <div className="error-message">{error}</div>
+                    ) : (
+                        <>
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Klinika nomi</th>
+                                        <th>Direktor</th>
+                                        <th>Filiallar</th>
+                                        <th>Xodimlar</th>
+                                        <th>Tarif</th>
+                                        <th>Saqlash hajmi</th>
+                                        <th>Obuna davri</th>
+                                        <th>Holati</th>
+                                        <th>Harakatlar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {clinics.map((clinic, index) => {
+                                        const storage = parseStorage(clinic.storage)
+                                        const status = mapStatus(clinic.status)
 
-                    <Pagination
-                        itemsPerPage={itemsPerPage}
-                        totalItems={filteredClinics.length}
-                        currentPage={currentPage}
-                        onPageChange={handlePageChange}
-                    />
+                                        return (
+                                            <tr key={index}>
+                                                <td>
+                                                    <div className="clinic-name">{clinic.clinic_name}</div>
+                                                </td>
+                                                <td>{clinic.director}</td>
+                                                <td>{clinic.branches}</td>
+                                                <td>
+                                                    <div className="staff-count">
+                                                        <span title="Jami xodimlar">{clinic.employees}</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span className="tariff-badge">{clinic.subscription_plan}</span>
+                                                </td>
+                                                <td>
+                                                    <div className="storage-info">
+                                                        <div className="storage-bar">
+                                                            <div
+                                                                className="storage-used"
+                                                                style={{
+                                                                    width: `${storage.allocated > 0 ? (storage.used / storage.allocated) * 100 : 0}%`,
+                                                                }}
+                                                            ></div>
+                                                        </div>
+                                                        <div className="storage-text">{clinic.storage}</div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="subscription-period">{clinic.subscription_period}</div>
+                                                </td>
+                                                <td>
+                                                    <span className={`status ${status}`}>{clinic.status}</span>
+                                                </td>
+                                                <td>
+                                                    <Link to={`/super-director/clinics/${clinic.id}`} className="btn btn-sm btn-secondary">
+                                                        Batafsil
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+
+                            <Pagination
+                                itemsPerPage={itemsPerPage}
+                                totalItems={totalItems}
+                                currentPage={currentPage}
+                                onPageChange={handlePageChange}
+                            />
+                        </>
+                    )}
                 </div>
             </div>
 
