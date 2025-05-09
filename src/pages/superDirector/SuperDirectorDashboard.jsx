@@ -17,6 +17,7 @@ const SuperDirectorDashboard = () => {
         { name: "Klinikalar", path: "/super-director/clinics", icon: "🏥" },
         { name: "So'rovlar", path: "/super-director/requests", icon: "📨" },
         { name: "API muammolari", path: "/super-director/api-issues", icon: "🔧" },
+        { name: "Tariflar", path: "/super-director/tariffs", icon: "💰" },
     ]
 
     return <DashboardLayout title="Super Director Panel" routes={routes} />

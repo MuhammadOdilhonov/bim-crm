@@ -15,6 +15,7 @@ const SuperAdminDashboard = () => {
     const routes = [
         { name: "Mijoz so'rovlari", path: "/super-admin", icon: "📨" },
         { name: "Klinikalar", path: "/super-admin/clinics", icon: "🏥" },
+        { name: "Tariflar", path: "/super-admin/tariffs", icon: "💰" },
     ]
 
     return <DashboardLayout title="Super Admin Panel" routes={routes} />

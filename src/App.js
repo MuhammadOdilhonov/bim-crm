@@ -12,8 +12,10 @@ import Clinics from "./pages/superDirector/Clinics"
 import ClinicDetails from "./pages/superDirector/ClinicDetails"
 import Requests from "./pages/superDirector/Requests"
 import ApiIssues from "./pages/superDirector/ApiIssues"
+import Tariffs from "./pages/superDirector/Tariffs"
 import ClientRequests from "./pages/superAdmin/ClientRequests"
 import AdminClinics from "./pages/superAdmin/AdminClinics"
+import AdminTariffs from "./pages/superAdmin/AdminTariffs"
 
 function App() {
   return (
@@ -37,6 +39,7 @@ function App() {
               <Route path="clinics/:id" element={<ClinicDetails />} />
               <Route path="requests" element={<Requests />} />
               <Route path="api-issues" element={<ApiIssues />} />
+              <Route path="tariffs" element={<Tariffs />} />
             </Route>
 
             {/* SuperAdmin Routes */}
@@ -50,6 +53,7 @@ function App() {
             >
               <Route index element={<ClientRequests />} />
               <Route path="clinics" element={<AdminClinics />} />
+              <Route path="tariffs" element={<AdminTariffs />} />
             </Route>
 
             <Route path="/" element={<Navigate to="/login" />} />
