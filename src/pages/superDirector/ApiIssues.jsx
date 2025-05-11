@@ -1,46 +1,115 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { mockApiIssues, mockClinics } from "../../data/mockData"
+import { getAllApiIssues, updateApiIssueStatus } from "../../api/apiProblems"
 import Pagination from "../../components/Pagination"
+import Modal from "../../components/Modal"
 
 const ApiIssues = () => {
-    const [issues, setIssues] = useState(mockApiIssues)
+    const [issues, setIssues] = useState([])
     const [statusFilter, setStatusFilter] = useState("all")
     const [currentPage, setCurrentPage] = useState(0)
-    const [itemsPerPage] = useState(5)
+    const [itemsPerPage] = useState(10)
+    const [totalItems, setTotalItems] = useState(0)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [updatingIssue, setUpdatingIssue] = useState(null)
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+    const [selectedIssue, setSelectedIssue] = useState(null)
 
     useEffect(() => {
-        console.log("ApiIssues component mounted")
-    }, [])
+        fetchApiIssues()
+    }, [currentPage, statusFilter])
 
-    // Get clinic names for display
-    const getClinicName = (clinicId) => {
-        const clinic = mockClinics.find((c) => c.id === clinicId)
-        return clinic ? clinic.name : "Unknown Clinic"
+    const fetchApiIssues = async () => {
+        setLoading(true)
+        setError(null)
+
+        try {
+            const result = await getAllApiIssues(currentPage + 1, itemsPerPage, "", statusFilter)
+
+            if (result.success) {
+                setIssues(result.data.results)
+                setTotalItems(result.data.count)
+            } else {
+                setError(result.error)
+                setIssues([])
+            }
+        } catch (err) {
+            console.error("Error fetching API issues:", err)
+            setError("Failed to load API issues. Please try again later.")
+            setIssues([])
+        } finally {
+            setLoading(false)
+        }
     }
 
-    const filteredIssues = issues.filter((issue) => {
-        return statusFilter === "all" || issue.status === statusFilter
-    })
+    const handleStatusChange = async (id, newStatus) => {
+        setUpdatingIssue(id)
+        setError(null)
 
-    // Get current items for pagination
-    const indexOfLastItem = (currentPage + 1) * itemsPerPage
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage
-    const currentItems = filteredIssues.slice(indexOfFirstItem, indexOfLastItem)
+        try {
+            const result = await updateApiIssueStatus(id, newStatus)
 
-    const handleStatusChange = (id, newStatus) => {
-        setIssues(
-            issues.map((issue) =>
-                issue.id === id
-                    ? { ...issue, status: newStatus, resolvedAt: newStatus === "resolved" ? new Date().toISOString() : null }
-                    : issue,
-            ),
-        )
+            if (result.success) {
+                // Update the local state with the updated issue
+                setIssues(
+                    issues.map((issue) =>
+                        issue.id === id
+                            ? { ...issue, status: newStatus, resolved_at: newStatus === "resolved" ? new Date().toISOString() : null }
+                            : issue,
+                    ),
+                )
+
+                // Also update the selected issue if it's currently being viewed
+                if (selectedIssue && selectedIssue.id === id) {
+                    setSelectedIssue({
+                        ...selectedIssue,
+                        status: newStatus,
+                        resolved_at: newStatus === "resolved" ? new Date().toISOString() : null,
+                    })
+                }
+            } else {
+                setError(result.error)
+            }
+        } catch (err) {
+            console.error("Error updating API issue status:", err)
+            setError("Failed to update API issue status. Please try again later.")
+        } finally {
+            setUpdatingIssue(null)
+        }
     }
 
     const handlePageChange = (selectedPage) => {
         setCurrentPage(selectedPage)
+    }
+
+    const handleViewIssue = (issue) => {
+        setSelectedIssue(issue)
+        setIsViewModalOpen(true)
+    }
+
+    // Map API status to UI status class
+    const getStatusClass = (status) => {
+        if (status === "resolved") return "active"
+        if (status === "pending") return "pending"
+        if (status === "in_progress") return "inactive"
+        return "pending" // Default for "error" or other statuses
+    }
+
+    // Map API status to UI status text
+    const getStatusText = (status) => {
+        if (status === "resolved") return "Hal qilingan"
+        if (status === "pending") return "Tekshirilmoqda"
+        if (status === "in_progress") return "Jarayonda"
+        return "Xatolik" // For "error" status
+    }
+
+    // Truncate text to 100 characters
+    const truncateText = (text, maxLength = 100) => {
+        if (!text) return ""
+        if (text.length <= maxLength) return text
+        return text.substring(0, maxLength) + "..."
     }
 
     return (
@@ -57,96 +126,193 @@ const ApiIssues = () => {
                         <div className="status-filter">
                             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                                 <option value="all">Barcha holatlar</option>
-                                <option value="investigating">Tekshirilmoqda</option>
-                                <option value="in progress">Jarayonda</option>
+                                <option value="pending">Tekshirilmoqda</option>
+                                <option value="in_progress">Jarayonda</option>
                                 <option value="resolved">Hal qilingan</option>
+                                <option value="error">Xatolik</option>
                             </select>
                         </div>
                     </div>
 
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Klinika</th>
-                                <th>API nomi</th>
-                                <th>Muammo</th>
-                                <th>Xabar qilingan vaqt</th>
-                                <th>Hal qilingan vaqt</th>
-                                <th>Ta'sirlangan foydalanuvchilar</th>
-                                <th>Holati</th>
-                                <th>Harakatlar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentItems.map((issue) => (
-                                <tr key={issue.id}>
-                                    <td>{getClinicName(issue.clinicId)}</td>
-                                    <td>{issue.apiName}</td>
-                                    <td>{issue.issue}</td>
-                                    <td>{new Date(issue.reportedAt).toLocaleString()}</td>
-                                    <td>{issue.resolvedAt ? new Date(issue.resolvedAt).toLocaleString() : "-"}</td>
-                                    <td>{issue.affectedUsers}</td>
-                                    <td>
-                                        <span
-                                            className={`status ${issue.status === "resolved"
-                                                    ? "active"
-                                                    : issue.status === "investigating"
-                                                        ? "pending"
-                                                        : "inactive"
-                                                }`}
-                                        >
-                                            {issue.status === "investigating"
-                                                ? "Tekshirilmoqda"
-                                                : issue.status === "in progress"
-                                                    ? "Jarayonda"
-                                                    : issue.status === "resolved"
-                                                        ? "Hal qilingan"
-                                                        : issue.status}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="action-buttons">
-                                            {issue.status === "investigating" && (
-                                                <button
-                                                    className="btn btn-sm btn-primary"
-                                                    onClick={() => handleStatusChange(issue.id, "in progress")}
-                                                >
-                                                    Jarayonga o'tkazish
-                                                </button>
-                                            )}
+                    {error && <div className="error-message">{error}</div>}
 
-                                            {issue.status === "in progress" && (
-                                                <button
-                                                    className="btn btn-sm btn-primary"
-                                                    onClick={() => handleStatusChange(issue.id, "resolved")}
-                                                >
-                                                    Hal qilindi
-                                                </button>
-                                            )}
+                    {loading ? (
+                        <div className="loading">Ma'lumotlar yuklanmoqda...</div>
+                    ) : (
+                        <>
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Klinika</th>
+                                        <th>API nomi</th>
+                                        <th>Muammo</th>
+                                        <th>Xabar qilingan vaqt</th>
+                                        <th>Hal qilingan vaqt</th>
+                                        <th>Ta'sirlangan foydalanuvchilar</th>
+                                        <th>Holati</th>
+                                        <th>Harakatlar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {issues.map((issue) => (
+                                        <tr key={issue.id}>
+                                            <td>{issue.clinic_name}</td>
+                                            <td>{issue.api_name}</td>
+                                            <td title={issue.issue_description}>{truncateText(issue.issue_description)}</td>
+                                            <td>{new Date(issue.reported_at).toLocaleString()}</td>
+                                            <td>{issue.resolved_at ? new Date(issue.resolved_at).toLocaleString() : "-"}</td>
+                                            <td>{issue.affected_users}</td>
+                                            <td>
+                                                <span className={`status ${getStatusClass(issue.status)}`}>{getStatusText(issue.status)}</span>
+                                            </td>
+                                            <td>
+                                                <div className="action-buttons">
+                                                    <button className="btn btn-sm btn-secondary" onClick={() => handleViewIssue(issue)}>
+                                                        Ko'rish
+                                                    </button>
 
-                                            {issue.status === "resolved" && (
-                                                <button
-                                                    className="btn btn-sm btn-secondary"
-                                                    onClick={() => handleStatusChange(issue.id, "investigating")}
-                                                >
-                                                    Qayta ochish
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                                    {issue.status === "error" && (
+                                                        <button
+                                                            className="btn btn-sm btn-primary"
+                                                            onClick={() => handleStatusChange(issue.id, "pending")}
+                                                            disabled={updatingIssue === issue.id}
+                                                        >
+                                                            {updatingIssue === issue.id ? "..." : "Tekshirish"}
+                                                        </button>
+                                                    )}
 
-                    <Pagination
-                        itemsPerPage={itemsPerPage}
-                        totalItems={filteredIssues.length}
-                        currentPage={currentPage}
-                        onPageChange={handlePageChange}
-                    />
+                                                    {issue.status === "pending" && (
+                                                        <button
+                                                            className="btn btn-sm btn-primary"
+                                                            onClick={() => handleStatusChange(issue.id, "in_progress")}
+                                                            disabled={updatingIssue === issue.id}
+                                                        >
+                                                            {updatingIssue === issue.id ? "..." : "Jarayonga"}
+                                                        </button>
+                                                    )}
+
+                                                    {issue.status === "in_progress" && (
+                                                        <button
+                                                            className="btn btn-sm btn-primary"
+                                                            onClick={() => handleStatusChange(issue.id, "resolved")}
+                                                            disabled={updatingIssue === issue.id}
+                                                        >
+                                                            {updatingIssue === issue.id ? "..." : "Hal qilindi"}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            <Pagination
+                                itemsPerPage={itemsPerPage}
+                                totalItems={totalItems}
+                                currentPage={currentPage}
+                                onPageChange={handlePageChange}
+                            />
+                        </>
+                    )}
                 </div>
             </div>
+
+            {/* View Issue Modal */}
+            <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="API muammosi ma'lumotlari">
+                {selectedIssue && (
+                    <div className="view-issue-details">
+                        <div className="issue-info">
+                            <div className="info-item">
+                                <div className="info-label">Klinika:</div>
+                                <div className="info-value">{selectedIssue.clinic_name}</div>
+                            </div>
+                            <div className="info-item">
+                                <div className="info-label">API nomi:</div>
+                                <div className="info-value">{selectedIssue.api_name}</div>
+                            </div>
+                            <div className="info-item">
+                                <div className="info-label">Xabar qilingan vaqt:</div>
+                                <div className="info-value">{new Date(selectedIssue.reported_at).toLocaleString()}</div>
+                            </div>
+                            <div className="info-item">
+                                <div className="info-label">Hal qilingan vaqt:</div>
+                                <div className="info-value">
+                                    {selectedIssue.resolved_at ? new Date(selectedIssue.resolved_at).toLocaleString() : "-"}
+                                </div>
+                            </div>
+                            <div className="info-item">
+                                <div className="info-label">Ta'sirlangan foydalanuvchilar:</div>
+                                <div className="info-value">{selectedIssue.affected_users}</div>
+                            </div>
+                            <div className="info-item">
+                                <div className="info-label">Holati:</div>
+                                <div className="info-value">
+                                    <span className={`status ${getStatusClass(selectedIssue.status)}`}>
+                                        {getStatusText(selectedIssue.status)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="issue-description">
+                            <h4>Muammo tavsifi:</h4>
+                            <div className="description-content">{selectedIssue.issue_description}</div>
+                        </div>
+
+                        <div className="status-actions">
+                            <h4>Holatni o'zgartirish:</h4>
+                            <div className="action-buttons modal-actions">
+                                {selectedIssue.status === "error" && (
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() => handleStatusChange(selectedIssue.id, "pending")}
+                                        disabled={updatingIssue === selectedIssue.id}
+                                    >
+                                        {updatingIssue === selectedIssue.id ? "..." : "Tekshirishga olish"}
+                                    </button>
+                                )}
+
+                                {selectedIssue.status === "pending" && (
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() => handleStatusChange(selectedIssue.id, "in_progress")}
+                                        disabled={updatingIssue === selectedIssue.id}
+                                    >
+                                        {updatingIssue === selectedIssue.id ? "..." : "Jarayonga o'tkazish"}
+                                    </button>
+                                )}
+
+                                {selectedIssue.status === "in_progress" && (
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() => handleStatusChange(selectedIssue.id, "resolved")}
+                                        disabled={updatingIssue === selectedIssue.id}
+                                    >
+                                        {updatingIssue === selectedIssue.id ? "..." : "Hal qilindi"}
+                                    </button>
+                                )}
+
+                                {selectedIssue.status === "resolved" && (
+                                    <button
+                                        className="btn btn-secondary"
+                                        onClick={() => handleStatusChange(selectedIssue.id, "pending")}
+                                        disabled={updatingIssue === selectedIssue.id}
+                                    >
+                                        {updatingIssue === selectedIssue.id ? "..." : "Qayta ochish"}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="form-actions">
+                            <button className="btn btn-secondary" onClick={() => setIsViewModalOpen(false)}>
+                                Yopish
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     )
 }

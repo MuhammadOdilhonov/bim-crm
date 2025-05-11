@@ -1,14 +1,22 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { mockTariffs, mockClinics, mockTariffAssignments } from "../../data/mockData"
+import {
+    getAllTariffPlans,
+    createTariffPlan,
+    searchClinics,
+    searchTariffPlans,
+    assignTariffToClinic,
+    getTariffAssignmentHistory,
+    updateTariffAssignmentStatus,
+} from "../../api/apiTariffs"
 import Modal from "../../components/Modal"
 import Pagination from "../../components/Pagination"
 
 const AdminTariffs = () => {
-    const [tariffs, setTariffs] = useState(mockTariffs)
-    const [clinics, setClinics] = useState(mockClinics)
-    const [assignments, setAssignments] = useState(mockTariffAssignments)
+    const [tariffs, setTariffs] = useState([])
+    const [assignments, setAssignments] = useState([])
+    const [totalAssignments, setTotalAssignments] = useState(0)
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
     const [isNewTariffModalOpen, setIsNewTariffModalOpen] = useState(false)
@@ -17,206 +25,270 @@ const AdminTariffs = () => {
     const [itemsPerPage] = useState(5)
     const [assignmentsPage, setAssignmentsPage] = useState(0)
     const [assignmentsPerPage] = useState(5)
+    const [loading, setLoading] = useState(false)
+    const [assignmentsLoading, setAssignmentsLoading] = useState(false)
+    const [error, setError] = useState(null)
+    const [assignmentsError, setAssignmentsError] = useState(null)
+    const [submitting, setSubmitting] = useState(false)
 
     const [newTariff, setNewTariff] = useState({
         name: "",
         description: "",
-        storageGB: 5,
-        price: 3000000,
-        features: "",
+        price: 0,
+        storage_limit_gb: 5,
     })
 
     const [newAssignment, setNewAssignment] = useState({
-        clinicId: "",
-        tariffId: "",
-        assignedDate: new Date().toISOString().split("T")[0],
-        expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0],
-        discountApplied: "",
-        discountPercentage: 0,
+        clinic: "",
+        plan: "",
+        start_date: new Date().toISOString().split("T")[0],
+        end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0],
+        discount: 0,
+        description_discount: "",
     })
+
+    const [clinicSearchTerm, setClinicSearchTerm] = useState("")
+    const [clinicOptions, setClinicOptions] = useState([])
+    const [clinicSearchLoading, setClinicSearchLoading] = useState(false)
+
+    const [tariffSearchTerm, setTariffSearchTerm] = useState("")
+    const [tariffOptions, setTariffOptions] = useState([])
+    const [tariffSearchLoading, setTariffSearchLoading] = useState(false)
+    const [selectedTariff, setSelectedTariff] = useState(null)
 
     useEffect(() => {
-        console.log("AdminTariffs component mounted")
-    }, [])
+        fetchTariffs()
+        fetchAssignments()
+    }, [currentPage, searchTerm, statusFilter])
 
-    // Format storage function
-    const formatStorage = (storage) => {
-        if (storage.tb > 0) return `${storage.tb} TB`
-        if (storage.gb > 0) return `${storage.gb} GB`
-        return `${storage.mb} MB`
+    useEffect(() => {
+        fetchAssignments()
+    }, [assignmentsPage])
+
+    useEffect(() => {
+        if (clinicSearchTerm) {
+            searchClinicOptions(clinicSearchTerm)
+        }
+    }, [clinicSearchTerm])
+
+    useEffect(() => {
+        if (tariffSearchTerm) {
+            searchTariffOptions(tariffSearchTerm)
+        }
+    }, [tariffSearchTerm])
+
+    const fetchTariffs = async () => {
+        setLoading(true)
+        setError(null)
+
+        try {
+            const result = await getAllTariffPlans(currentPage + 1, itemsPerPage, searchTerm, statusFilter)
+
+            if (result.success) {
+                setTariffs(result.data.results || [])
+            } else {
+                setError(result.error)
+            }
+        } catch (err) {
+            console.error("Error fetching tariffs:", err)
+            setError("Failed to load tariffs. Please try again later.")
+        } finally {
+            setLoading(false)
+        }
     }
 
-    // Filter tariffs
-    const filteredTariffs = tariffs.filter((tariff) => {
-        const matchesSearch = tariff.name.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesStatus =
-            statusFilter === "all" ||
-            (statusFilter === "active" && tariff.isActive) ||
-            (statusFilter === "inactive" && !tariff.isActive)
-        return matchesSearch && matchesStatus
-    })
+    const fetchAssignments = async () => {
+        setAssignmentsLoading(true)
+        setAssignmentsError(null)
 
-    // Get current tariffs for pagination
-    const indexOfLastTariff = (currentPage + 1) * itemsPerPage
-    const indexOfFirstTariff = indexOfLastTariff - itemsPerPage
-    const currentTariffs = filteredTariffs.slice(indexOfFirstTariff, indexOfLastTariff)
+        try {
+            const result = await getTariffAssignmentHistory(assignmentsPage + 1, assignmentsPerPage)
 
-    // Get current assignments for pagination
-    const indexOfLastAssignment = (assignmentsPage + 1) * assignmentsPerPage
-    const indexOfFirstAssignment = indexOfLastAssignment - assignmentsPerPage
-    const currentAssignments = assignments.slice(indexOfFirstAssignment, indexOfLastAssignment)
-
-    // Get clinic name by ID
-    const getClinicName = (clinicId) => {
-        const clinic = clinics.find((c) => c.id === clinicId)
-        return clinic ? clinic.name : "Unknown Clinic"
+            if (result.success) {
+                setAssignments(result.data || [])
+                setTotalAssignments(result.totalCount || 0)
+            } else {
+                setAssignmentsError(result.error)
+            }
+        } catch (err) {
+            console.error("Error fetching assignments:", err)
+            setAssignmentsError("Failed to load tariff assignments. Please try again later.")
+        } finally {
+            setAssignmentsLoading(false)
+        }
     }
 
-    // Get tariff name by ID
-    const getTariffName = (tariffId) => {
-        const tariff = tariffs.find((t) => t.id === tariffId)
-        return tariff ? tariff.name : "Unknown Tariff"
+    const searchClinicOptions = async (search) => {
+        setClinicSearchLoading(true)
+
+        try {
+            const result = await searchClinics(search)
+
+            if (result.success) {
+                setClinicOptions(result.data || [])
+            } else {
+                console.error("Error searching clinics:", result.error)
+            }
+        } catch (err) {
+            console.error("Error searching clinics:", err)
+        } finally {
+            setClinicSearchLoading(false)
+        }
     }
 
-    // Handle input change for new tariff
+    const searchTariffOptions = async (search) => {
+        setTariffSearchLoading(true)
+
+        try {
+            const result = await searchTariffPlans(search)
+
+            if (result.success) {
+                setTariffOptions(result.data || [])
+            } else {
+                console.error("Error searching tariffs:", result.error)
+            }
+        } catch (err) {
+            console.error("Error searching tariffs:", err)
+        } finally {
+            setTariffSearchLoading(false)
+        }
+    }
+
     const handleTariffInputChange = (e) => {
         const { name, value } = e.target
         setNewTariff({
             ...newTariff,
-            [name]: value,
+            [name]: name === "price" || name === "storage_limit_gb" ? Number(value) : value,
         })
     }
 
-    // Handle input change for new assignment
     const handleAssignmentInputChange = (e) => {
         const { name, value } = e.target
         setNewAssignment({
             ...newAssignment,
-            [name]: value,
+            [name]: name === "discount" ? Number(value) : value,
         })
+
+        // If tariff plan is selected, find and store the selected tariff details
+        if (name === "plan") {
+            const selected = tariffOptions.find((tariff) => tariff.id === Number(value))
+            setSelectedTariff(selected)
+        }
     }
 
-    // Calculate actual payment amount
-    const calculateActualPayment = () => {
-        if (!newAssignment.tariffId) return 0
-
-        const tariff = tariffs.find((t) => t.id === Number(newAssignment.tariffId))
-        if (!tariff) return 0
-
-        const discount = Number(newAssignment.discountPercentage) || 0
-        return tariff.price * (1 - discount / 100)
+    const handleClinicSearch = (e) => {
+        setClinicSearchTerm(e.target.value)
     }
 
-    // Add new tariff
-    const handleAddTariff = () => {
-        // Create features array from comma-separated string
-        const featuresArray = newTariff.features
-            .split(",")
-            .map((feature) => feature.trim())
-            .filter((feature) => feature)
+    const handleTariffSearch = (e) => {
+        setTariffSearchTerm(e.target.value)
+    }
 
-        // Create a new tariff object
-        const newTariffObj = {
-            id: tariffs.length + 1,
-            name: newTariff.name,
-            description: newTariff.description,
-            storage: {
-                mb: 0,
-                gb: Number(newTariff.storageGB),
-                tb: 0,
-            },
-            price: Number(newTariff.price),
-            features: featuresArray,
-            clinicsCount: 0,
-            isActive: true,
+    const handleAddTariff = async () => {
+        // Validate form
+        if (!newTariff.name || !newTariff.price || !newTariff.storage_limit_gb) {
+            alert("Iltimos, barcha majburiy maydonlarni to'ldiring")
+            return
         }
 
-        // Add the new tariff to the list
-        setTariffs([...tariffs, newTariffObj])
+        setSubmitting(true)
+        setError(null)
 
-        // Reset form and close modal
-        setNewTariff({
-            name: "",
-            description: "",
-            storageGB: 5,
-            price: 3000000,
-            features: "",
-        })
-        setIsNewTariffModalOpen(false)
+        try {
+            const result = await createTariffPlan(newTariff)
+
+            if (result.success) {
+                // Refresh the tariffs list
+                fetchTariffs()
+
+                // Reset form and close modal
+                setNewTariff({
+                    name: "",
+                    description: "",
+                    price: 0,
+                    storage_limit_gb: 5,
+                })
+                setIsNewTariffModalOpen(false)
+            } else {
+                setError(result.error || "Tarif yaratishda xatolik yuz berdi")
+            }
+        } catch (err) {
+            console.error("Error creating tariff:", err)
+            setError("Tarif yaratishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.")
+        } finally {
+            setSubmitting(false)
+        }
     }
 
-    // Assign tariff to clinic
-    const handleAssignTariff = () => {
-        // Get selected tariff
-        const tariff = tariffs.find((t) => t.id === Number(newAssignment.tariffId))
-        if (!tariff) return
-
-        // Calculate actual payment
-        const actualPayment = calculateActualPayment()
-
-        // Create a new assignment object
-        const newAssignmentObj = {
-            id: assignments.length + 1,
-            clinicId: Number(newAssignment.clinicId),
-            tariffId: Number(newAssignment.tariffId),
-            assignedDate: newAssignment.assignedDate,
-            expiryDate: newAssignment.expiryDate,
-            status: "active",
-            paymentStatus: "paid",
-            paymentAmount: tariff.price,
-            discountApplied: newAssignment.discountApplied || "No discounts",
-            actualPayment: actualPayment,
+    const handleAssignTariff = async () => {
+        // Validate form
+        if (!newAssignment.clinic || !newAssignment.plan || !newAssignment.start_date || !newAssignment.end_date) {
+            alert("Iltimos, barcha majburiy maydonlarni to'ldiring")
+            return
         }
 
-        // Add the new assignment to the list
-        setAssignments([...assignments, newAssignmentObj])
+        setSubmitting(true)
+        setError(null)
 
-        // Update clinic's tariff
-        setClinics(
-            clinics.map((clinic) =>
-                clinic.id === Number(newAssignment.clinicId)
-                    ? {
-                        ...clinic,
-                        tariff: tariff.name,
-                        tariffPrice: tariff.price,
-                        subscriptionStart: newAssignment.assignedDate,
-                        subscriptionEnd: newAssignment.expiryDate,
-                        storageAllocated: tariff.storage,
-                    }
-                    : clinic,
-            ),
-        )
+        try {
+            const result = await assignTariffToClinic(newAssignment)
 
-        // Update tariff's clinicsCount
-        setTariffs(
-            tariffs.map((t) => (t.id === Number(newAssignment.tariffId) ? { ...t, clinicsCount: t.clinicsCount + 1 } : t)),
-        )
+            if (result.success) {
+                // Refresh the assignments list
+                fetchAssignments()
 
-        // Reset form and close modal
-        setNewAssignment({
-            clinicId: "",
-            tariffId: "",
-            assignedDate: new Date().toISOString().split("T")[0],
-            expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0],
-            discountApplied: "",
-            discountPercentage: 0,
-        })
-        setIsAssignTariffModalOpen(false)
+                // Reset form and close modal
+                setNewAssignment({
+                    clinic: "",
+                    plan: "",
+                    start_date: new Date().toISOString().split("T")[0],
+                    end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0],
+                    discount: 0,
+                    description_discount: "",
+                })
+                setSelectedTariff(null)
+                setIsAssignTariffModalOpen(false)
+            } else {
+                setError(result.error || "Tarifni ulashda xatolik yuz berdi")
+            }
+        } catch (err) {
+            console.error("Error assigning tariff:", err)
+            setError("Tarifni ulashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.")
+        } finally {
+            setSubmitting(false)
+        }
     }
 
-    // Toggle tariff status
-    const handleToggleTariffStatus = (id) => {
-        setTariffs(tariffs.map((tariff) => (tariff.id === id ? { ...tariff, isActive: !tariff.isActive } : tariff)))
+    const handleUpdateAssignmentStatus = async (id, status) => {
+        try {
+            const result = await updateTariffAssignmentStatus(id, status)
+
+            if (result.success) {
+                // Refresh assignments to get updated data
+                fetchAssignments()
+            } else {
+                setAssignmentsError(result.error || "Tarif holatini yangilashda xatolik yuz berdi")
+            }
+        } catch (err) {
+            console.error("Error updating assignment status:", err)
+            setAssignmentsError("Tarif holatini yangilashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.")
+        }
     }
 
-    // Handle page change for tariffs
     const handlePageChange = (selectedPage) => {
         setCurrentPage(selectedPage)
     }
 
-    // Handle page change for assignments
     const handleAssignmentsPageChange = (selectedPage) => {
         setAssignmentsPage(selectedPage)
+    }
+
+    // Calculate actual payment amount
+    const calculateActualPayment = () => {
+        if (!selectedTariff) return 0
+
+        const discount = Number(newAssignment.discount) || 0
+        return selectedTariff.price * (1 - discount / 100)
     }
 
     return (
@@ -257,62 +329,58 @@ const AdminTariffs = () => {
                         </div>
                     </div>
 
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Tarif nomi</th>
-                                <th>Tavsif</th>
-                                <th>Saqlash hajmi</th>
-                                <th>Narxi (so'm)</th>
-                                <th>Klinikalar soni</th>
-                                <th>Holati</th>
-                                <th>Harakatlar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentTariffs.map((tariff) => (
-                                <tr key={tariff.id}>
-                                    <td>{tariff.name}</td>
-                                    <td>{tariff.description}</td>
-                                    <td>{formatStorage(tariff.storage)}</td>
-                                    <td>{tariff.price.toLocaleString()}</td>
-                                    <td>{tariff.clinicsCount}</td>
-                                    <td>
-                                        <span className={`status ${tariff.isActive ? "active" : "inactive"}`}>
-                                            {tariff.isActive ? "Faol" : "Faol emas"}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="action-buttons">
-                                            <button className="btn btn-sm btn-secondary">Tahrirlash</button>
-                                            <button
-                                                className="btn btn-sm btn-primary"
-                                                onClick={() => {
-                                                    setNewAssignment({
-                                                        ...newAssignment,
-                                                        tariffId: tariff.id.toString(),
-                                                    })
-                                                    setIsAssignTariffModalOpen(true)
-                                                }}
-                                            >
-                                                Ulash
-                                            </button>
-                                            <button
-                                                className={`btn btn-sm ${tariff.isActive ? "btn-danger" : "btn-success"}`}
-                                                onClick={() => handleToggleTariffStatus(tariff.id)}
-                                            >
-                                                {tariff.isActive ? "O'chirish" : "Yoqish"}
-                                            </button>
-                                        </div>
-                                    </td>
+                    {error && <div className="error-message">{error}</div>}
+
+                    {loading ? (
+                        <div className="loading">Ma'lumotlar yuklanmoqda...</div>
+                    ) : (
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Tarif nomi</th>
+                                    <th>Tavsif</th>
+                                    <th>Saqlash hajmi</th>
+                                    <th>Narxi (so'm)</th>
+                                    <th>Chegirma</th>
+                                    <th>Sinov muddati</th>
+                                    <th>Harakatlar</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {tariffs.map((tariff) => (
+                                    <tr key={tariff.id}>
+                                        <td>{tariff.name}</td>
+                                        <td>{tariff.description || "-"}</td>
+                                        <td>{tariff.storage_limit_gb} GB</td>
+                                        <td>{tariff.price.toLocaleString()}</td>
+                                        <td>{tariff.discount ? `${tariff.discount}%` : "-"}</td>
+                                        <td>{tariff.trial_period_days ? `${tariff.trial_period_days} kun` : "-"}</td>
+                                        <td>
+                                            <div className="action-buttons">
+                                                <button
+                                                    className="btn btn-sm btn-primary"
+                                                    onClick={() => {
+                                                        setNewAssignment({
+                                                            ...newAssignment,
+                                                            plan: tariff.id.toString(),
+                                                        })
+                                                        setSelectedTariff(tariff)
+                                                        setIsAssignTariffModalOpen(true)
+                                                    }}
+                                                >
+                                                    Ulash
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
 
                     <Pagination
                         itemsPerPage={itemsPerPage}
-                        totalItems={filteredTariffs.length}
+                        totalItems={tariffs.length}
                         currentPage={currentPage}
                         onPageChange={handlePageChange}
                     />
@@ -326,51 +394,85 @@ const AdminTariffs = () => {
                 </div>
 
                 <div className="card-body">
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Klinika</th>
-                                <th>Tarif</th>
-                                <th>Ulangan sana</th>
-                                <th>Tugash sanasi</th>
-                                <th>Narxi (so'm)</th>
-                                <th>Chegirma</th>
-                                <th>To'langan summa</th>
-                                <th>Holati</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentAssignments.map((assignment) => (
-                                <tr key={assignment.id}>
-                                    <td>{getClinicName(assignment.clinicId)}</td>
-                                    <td>{getTariffName(assignment.tariffId)}</td>
-                                    <td>{new Date(assignment.assignedDate).toLocaleDateString()}</td>
-                                    <td>{new Date(assignment.expiryDate).toLocaleDateString()}</td>
-                                    <td>{assignment.paymentAmount.toLocaleString()}</td>
-                                    <td>{assignment.discountApplied}</td>
-                                    <td>{assignment.actualPayment.toLocaleString()}</td>
-                                    <td>
-                                        <span className={`status ${assignment.status === "active" ? "active" : "inactive"}`}>
-                                            {assignment.status === "active" ? "Faol" : "Tugagan"}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    {assignmentsError && <div className="error-message">{assignmentsError}</div>}
 
-                    <Pagination
-                        itemsPerPage={assignmentsPerPage}
-                        totalItems={assignments.length}
-                        currentPage={assignmentsPage}
-                        onPageChange={handleAssignmentsPageChange}
-                    />
+                    {assignmentsLoading ? (
+                        <div className="loading">Ma'lumotlar yuklanmoqda...</div>
+                    ) : (
+                        <>
+                            {assignments.length === 0 ? (
+                                <div className="no-data">Tarif ulash tarixi mavjud emas</div>
+                            ) : (
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Klinika</th>
+                                            <th>Tarif</th>
+                                            <th>Ulangan sana</th>
+                                            <th>Tugash sanasi</th>
+                                            <th>Narxi (so'm)</th>
+                                            <th>Chegirma</th>
+                                            <th>To'langan summa</th>
+                                            <th>Holati</th>
+                                            <th>Harakatlar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {assignments.map((assignment) => (
+                                            <tr key={assignment.id}>
+                                                <td>{assignment.clinic_name}</td>
+                                                <td>{assignment.plan_name}</td>
+                                                <td>{new Date(assignment.start_date).toLocaleDateString()}</td>
+                                                <td>{new Date(assignment.end_date).toLocaleDateString()}</td>
+                                                <td>{Number(assignment.price).toLocaleString()}</td>
+                                                <td>{assignment.discount}%</td>
+                                                <td>{Number(assignment.paid_amount).toLocaleString()}</td>
+                                                <td>
+                                                    <span className={`status ${assignment.status === "active" ? "active" : "inactive"}`}>
+                                                        {assignment.status === "active" ? "Faol" : "Tugagan"}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div className="action-buttons">
+                                                        {assignment.status === "active" ? (
+                                                            <button
+                                                                className="btn btn-sm btn-secondary"
+                                                                onClick={() => handleUpdateAssignmentStatus(assignment.id, "expired")}
+                                                            >
+                                                                Tugatish
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                className="btn btn-sm btn-primary"
+                                                                onClick={() => handleUpdateAssignmentStatus(assignment.id, "active")}
+                                                            >
+                                                                Faollashtirish
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+
+                            <Pagination
+                                itemsPerPage={assignmentsPerPage}
+                                totalItems={totalAssignments}
+                                currentPage={assignmentsPage}
+                                onPageChange={handleAssignmentsPageChange}
+                            />
+                        </>
+                    )}
                 </div>
             </div>
 
             {/* New Tariff Modal */}
             <Modal isOpen={isNewTariffModalOpen} onClose={() => setIsNewTariffModalOpen(false)} title="Yangi tarif qo'shish">
                 <div className="modal-form">
+                    {error && <div className="error-message">{error}</div>}
+
                     <div className="form-group">
                         <label htmlFor="name">Tarif nomi</label>
                         <input
@@ -390,20 +492,19 @@ const AdminTariffs = () => {
                             name="description"
                             value={newTariff.description}
                             onChange={handleTariffInputChange}
-                            required
                         ></textarea>
                     </div>
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label htmlFor="storageGB">Saqlash hajmi (GB)</label>
+                            <label htmlFor="storage_limit_gb">Saqlash hajmi (GB)</label>
                             <input
                                 type="number"
-                                id="storageGB"
-                                name="storageGB"
+                                id="storage_limit_gb"
+                                name="storage_limit_gb"
                                 min="1"
                                 max="1000"
-                                value={newTariff.storageGB}
+                                value={newTariff.storage_limit_gb}
                                 onChange={handleTariffInputChange}
                                 required
                             />
@@ -424,24 +525,12 @@ const AdminTariffs = () => {
                         </div>
                     </div>
 
-                    <div className="form-group">
-                        <label htmlFor="features">Funksiyalar (vergul bilan ajrating)</label>
-                        <textarea
-                            id="features"
-                            name="features"
-                            value={newTariff.features}
-                            onChange={handleTariffInputChange}
-                            placeholder="Bemorlar bazasi, Shifokorlar jadvali, ..."
-                            required
-                        ></textarea>
-                    </div>
-
                     <div className="form-actions">
-                        <button className="btn btn-secondary" onClick={() => setIsNewTariffModalOpen(false)}>
+                        <button className="btn btn-secondary" onClick={() => setIsNewTariffModalOpen(false)} disabled={submitting}>
                             Bekor qilish
                         </button>
-                        <button className="btn btn-primary" onClick={handleAddTariff}>
-                            Qo'shish
+                        <button className="btn btn-primary" onClick={handleAddTariff} disabled={submitting}>
+                            {submitting ? "Qo'shilmoqda..." : "Qo'shish"}
                         </button>
                     </div>
                 </div>
@@ -454,66 +543,84 @@ const AdminTariffs = () => {
                 title="Tarifni klinikaga ulash"
             >
                 <div className="modal-form">
+                    {error && <div className="error-message">{error}</div>}
+
                     <div className="form-row">
                         <div className="form-group">
-                            <label htmlFor="clinicId">Klinika</label>
-                            <select
-                                id="clinicId"
-                                name="clinicId"
-                                value={newAssignment.clinicId}
-                                onChange={handleAssignmentInputChange}
-                                required
-                            >
-                                <option value="">Klinikani tanlang</option>
-                                {clinics.map((clinic) => (
-                                    <option key={clinic.id} value={clinic.id}>
-                                        {clinic.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="tariffId">Tarif</label>
-                            <select
-                                id="tariffId"
-                                name="tariffId"
-                                value={newAssignment.tariffId}
-                                onChange={handleAssignmentInputChange}
-                                required
-                            >
-                                <option value="">Tarifni tanlang</option>
-                                {tariffs
-                                    .filter((tariff) => tariff.isActive)
-                                    .map((tariff) => (
-                                        <option key={tariff.id} value={tariff.id}>
-                                            {tariff.name} - {formatStorage(tariff.storage)} - {tariff.price.toLocaleString()} so'm
+                            <label htmlFor="clinic">Klinika</label>
+                            <div className="search-select">
+                                <input
+                                    type="text"
+                                    placeholder="Klinika nomini qidirish..."
+                                    value={clinicSearchTerm}
+                                    onChange={handleClinicSearch}
+                                />
+                                {clinicSearchLoading && <div className="loading-indicator">Qidirilmoqda...</div>}
+                                <select
+                                    id="clinic"
+                                    name="clinic"
+                                    value={newAssignment.clinic}
+                                    onChange={handleAssignmentInputChange}
+                                    required
+                                >
+                                    <option value="">Klinikani tanlang</option>
+                                    {clinicOptions.map((clinic) => (
+                                        <option key={clinic.id} value={clinic.id}>
+                                            {clinic.name}
                                         </option>
                                     ))}
-                            </select>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="plan">Tarif</label>
+                            <div className="search-select">
+                                <input
+                                    type="text"
+                                    placeholder="Tarif nomini qidirish..."
+                                    value={tariffSearchTerm}
+                                    onChange={handleTariffSearch}
+                                />
+                                {tariffSearchLoading && <div className="loading-indicator">Qidirilmoqda...</div>}
+                                <select
+                                    id="plan"
+                                    name="plan"
+                                    value={newAssignment.plan}
+                                    onChange={handleAssignmentInputChange}
+                                    required
+                                >
+                                    <option value="">Tarifni tanlang</option>
+                                    {tariffOptions.map((tariff) => (
+                                        <option key={tariff.id} value={tariff.id}>
+                                            {tariff.name} - {tariff.storage_limit_gb} GB - {tariff.price.toLocaleString()} so'm
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                     </div>
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label htmlFor="assignedDate">Ulangan sana</label>
+                            <label htmlFor="start_date">Ulangan sana</label>
                             <input
                                 type="date"
-                                id="assignedDate"
-                                name="assignedDate"
-                                value={newAssignment.assignedDate}
+                                id="start_date"
+                                name="start_date"
+                                value={newAssignment.start_date}
                                 onChange={handleAssignmentInputChange}
                                 required
                             />
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="expiryDate">Tugash sanasi</label>
+                            <label htmlFor="end_date">Tugash sanasi</label>
                             <input
                                 type="date"
-                                id="expiryDate"
-                                name="expiryDate"
-                                value={newAssignment.expiryDate}
+                                id="end_date"
+                                name="end_date"
+                                value={newAssignment.end_date}
                                 onChange={handleAssignmentInputChange}
                                 required
                             />
@@ -522,51 +629,43 @@ const AdminTariffs = () => {
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label htmlFor="discountApplied">Chegirma tavsifi</label>
+                            <label htmlFor="description_discount">Chegirma tavsifi</label>
                             <input
                                 type="text"
-                                id="discountApplied"
-                                name="discountApplied"
-                                value={newAssignment.discountApplied}
+                                id="description_discount"
+                                name="description_discount"
+                                value={newAssignment.description_discount}
                                 onChange={handleAssignmentInputChange}
                                 placeholder="Masalan: Yillik to'lov uchun 10%"
                             />
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="discountPercentage">Chegirma foizi (%)</label>
+                            <label htmlFor="discount">Chegirma foizi (%)</label>
                             <input
                                 type="number"
-                                id="discountPercentage"
-                                name="discountPercentage"
+                                id="discount"
+                                name="discount"
                                 min="0"
                                 max="100"
-                                value={newAssignment.discountPercentage}
+                                value={newAssignment.discount}
                                 onChange={handleAssignmentInputChange}
                             />
                         </div>
                     </div>
 
-                    {newAssignment.tariffId && (
+                    {selectedTariff && (
                         <div className="payment-summary">
                             <h4>To'lov ma'lumotlari</h4>
                             <div className="payment-details">
                                 <div className="payment-row">
                                     <span>Tarif narxi:</span>
-                                    <span>
-                                        {tariffs.find((t) => t.id === Number(newAssignment.tariffId))?.price.toLocaleString()} so'm
-                                    </span>
+                                    <span>{selectedTariff.price.toLocaleString()} so'm</span>
                                 </div>
-                                {Number(newAssignment.discountPercentage) > 0 && (
+                                {Number(newAssignment.discount) > 0 && (
                                     <div className="payment-row">
-                                        <span>Chegirma ({newAssignment.discountPercentage}%):</span>
-                                        <span>
-                                            {(
-                                                (tariffs.find((t) => t.id === Number(newAssignment.tariffId))?.price || 0) *
-                                                (Number(newAssignment.discountPercentage) / 100)
-                                            ).toLocaleString()}{" "}
-                                            so'm
-                                        </span>
+                                        <span>Chegirma ({newAssignment.discount}%):</span>
+                                        <span>{((selectedTariff.price * Number(newAssignment.discount)) / 100).toLocaleString()} so'm</span>
                                     </div>
                                 )}
                                 <div className="payment-row total">
@@ -578,15 +677,19 @@ const AdminTariffs = () => {
                     )}
 
                     <div className="form-actions">
-                        <button className="btn btn-secondary" onClick={() => setIsAssignTariffModalOpen(false)}>
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => setIsAssignTariffModalOpen(false)}
+                            disabled={submitting}
+                        >
                             Bekor qilish
                         </button>
                         <button
                             className="btn btn-primary"
                             onClick={handleAssignTariff}
-                            disabled={!newAssignment.clinicId || !newAssignment.tariffId}
+                            disabled={submitting || !newAssignment.clinic || !newAssignment.plan}
                         >
-                            Ulash
+                            {submitting ? "Ulash..." : "Ulash"}
                         </button>
                     </div>
                 </div>

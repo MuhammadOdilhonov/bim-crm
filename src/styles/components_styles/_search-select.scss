@@ -1,0 +1,28 @@
+.search-select {
+    position: relative;
+    width: 100%;
+
+    input {
+        margin-bottom: 8px;
+        width: 100%;
+    }
+
+    select {
+        width: 100%;
+    }
+
+    .loading-indicator {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        font-size: 12px;
+        color: #666;
+    }
+}
+
+.no-data {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}

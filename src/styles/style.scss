@@ -8,6 +8,7 @@
 @import './components_styles/sidebar';
 @import './components_styles/header';
 @import './components_styles/dashboard';
+@import './components_styles/search-select';
 @import url('./pages_styles/_login.scss');
 @import url('./components_styles/_pagination.scss');
 @import url('./pages_styles/_tariffs.scss');
@@ -1365,6 +1366,65 @@ a {
 
         .login-card {
             padding: 25px;
+        }
+    }
+}
+
+.view-issue-details {
+    .issue-info {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+
+            .info-label {
+                font-weight: 500;
+                color: #666;
+            }
+
+            .info-value {
+                color: #333;
+            }
+        }
+    }
+
+    .issue-description {
+        margin-bottom: 20px;
+
+        h4 {
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .description-content {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 3px solid #43cea2;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    }
+
+    .status-actions {
+        margin-bottom: 20px;
+
+        h4 {
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
         }
     }
 }

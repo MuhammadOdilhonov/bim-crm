@@ -120,3 +120,22 @@ export const getBranchStatistics = async (clinicId) => {
         }
     }
 }
+
+// Create a new clinic
+export const createClinic = async (clinicData) => {
+    try {
+        const response = await client.post("/clinics/", clinicData)
+
+        console.log("API response - createClinic:", response.data)
+        return {
+            success: true,
+            data: response.data,
+        }
+    } catch (error) {
+        console.error("Error creating clinic:", error.response?.data || error.message)
+        return {
+            success: false,
+            error: error.response?.data?.error || "Failed to create clinic",
+        }
+    }
+}

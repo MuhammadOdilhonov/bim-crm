@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { getAllClinics } from "../../api/apiClinics"
+import { getAllClinics, createClinic } from "../../api/apiClinics"
 import Modal from "../../components/Modal"
 import Pagination from "../../components/Pagination"
 
@@ -15,16 +15,14 @@ const Clinics = () => {
         name: "",
         email: "",
         phone: "",
-        director: "",
         licenseNumber: "",
-        storageGB: 5,
-        price: 5000000,
     })
     const [currentPage, setCurrentPage] = useState(0)
     const [itemsPerPage] = useState(5)
     const [totalItems, setTotalItems] = useState(0)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [submitting, setSubmitting] = useState(false)
 
     useEffect(() => {
         fetchClinics()
@@ -61,63 +59,49 @@ const Clinics = () => {
         })
     }
 
-    const handleAddClinic = () => {
-        // Create a new clinic object
-        const newClinicObj = {
-            name: newClinic.name,
-            email: newClinic.email,
-            phone: newClinic.phone,
-            director: newClinic.director,
-            licenseNumber: newClinic.licenseNumber,
-            status: "pending",
-            subscriptionStart: new Date().toISOString().split("T")[0],
-            subscriptionEnd: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split("T")[0],
-            storageAllocated: {
-                mb: 0,
-                gb: Number.parseInt(newClinic.storageGB),
-                tb: 0,
-            },
-            storageUsed: {
-                mb: 0,
-                gb: 0,
-                tb: 0,
-            },
-            tariff: "Standard",
-            tariffPrice: Number.parseInt(newClinic.price),
-            discounts: "No discounts",
-            databaseCost: Number.parseInt(newClinic.price) * 0.3, // 30% of price as database cost
-            profit: Number.parseInt(newClinic.price) * 0.7, // 70% of price as profit
-            branches: [],
-            staff: {
-                doctors: 0,
-                admins: 0,
-                nurses: 0,
-                total: 0,
-            },
-            patients: {
-                total: 0,
-                daily: 0,
-                monthly: 0,
-                yearly: 0,
-            },
-            isTrial: false,
-            hasIssues: false,
+    const handleAddClinic = async () => {
+        // Validate form
+        if (!newClinic.name || !newClinic.email || !newClinic.phone || !newClinic.licenseNumber) {
+            alert("Iltimos, barcha maydonlarni to'ldiring")
+            return
         }
 
-        // Add the new clinic to the list
-        setClinics([...clinics, newClinicObj])
+        setSubmitting(true)
+        setError(null)
 
-        // Reset form and close modal
-        setNewClinic({
-            name: "",
-            email: "",
-            phone: "",
-            director: "",
-            licenseNumber: "",
-            storageGB: 5,
-            price: 5000000,
-        })
-        setIsNewClinicModalOpen(false)
+        try {
+            // Prepare data for API
+            const clinicData = {
+                name: newClinic.name,
+                email: newClinic.email,
+                phone_number: newClinic.phone,
+                license_number: newClinic.licenseNumber,
+            }
+
+            // Call API to create clinic
+            const result = await createClinic(clinicData)
+
+            if (result.success) {
+                // Refresh the clinics list
+                fetchClinics()
+
+                // Reset form and close modal
+                setNewClinic({
+                    name: "",
+                    email: "",
+                    phone: "",
+                    licenseNumber: "",
+                })
+                setIsNewClinicModalOpen(false)
+            } else {
+                setError(result.error || "Klinika yaratishda xatolik yuz berdi")
+            }
+        } catch (err) {
+            console.error("Error creating clinic:", err)
+            setError("Klinika yaratishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.")
+        } finally {
+            setSubmitting(false)
+        }
     }
 
     const handlePageChange = (selectedPage) => {
@@ -268,99 +252,41 @@ const Clinics = () => {
                 title="Yangi klinika qo'shish"
             >
                 <div className="modal-form">
+                    {error && <div className="error-message">{error}</div>}
+
                     <div className="form-group">
                         <label htmlFor="name">Klinika nomi</label>
                         <input type="text" id="name" name="name" value={newClinic.name} onChange={handleInputChange} required />
                     </div>
 
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="email">Elektron pochta</label>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                value={newClinic.email}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="phone">Telefon raqami</label>
-                            <input
-                                type="text"
-                                id="phone"
-                                name="phone"
-                                value={newClinic.phone}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </div>
+                    <div className="form-group">
+                        <label htmlFor="email">Elektron pochta</label>
+                        <input type="email" id="email" name="email" value={newClinic.email} onChange={handleInputChange} required />
                     </div>
 
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="director">Direktor</label>
-                            <input
-                                type="text"
-                                id="director"
-                                name="director"
-                                value={newClinic.director}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="licenseNumber">Litsenziya raqami</label>
-                            <input
-                                type="text"
-                                id="licenseNumber"
-                                name="licenseNumber"
-                                value={newClinic.licenseNumber}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </div>
+                    <div className="form-group">
+                        <label htmlFor="phone">Telefon raqami</label>
+                        <input type="text" id="phone" name="phone" value={newClinic.phone} onChange={handleInputChange} required />
                     </div>
 
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="storageGB">Ajratiladigan saqlash hajmi (GB)</label>
-                            <input
-                                type="number"
-                                id="storageGB"
-                                name="storageGB"
-                                min="1"
-                                max="1000"
-                                value={newClinic.storageGB}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="price">Narxi (so'm)</label>
-                            <input
-                                type="number"
-                                id="price"
-                                name="price"
-                                min="1000000"
-                                step="100000"
-                                value={newClinic.price}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </div>
+                    <div className="form-group">
+                        <label htmlFor="licenseNumber">Litsenziya raqami</label>
+                        <input
+                            type="text"
+                            id="licenseNumber"
+                            name="licenseNumber"
+                            value={newClinic.licenseNumber}
+                            onChange={handleInputChange}
+                            required
+                        />
                     </div>
 
                     <div className="form-actions">
-                        <button className="btn btn-secondary" onClick={() => setIsNewClinicModalOpen(false)}>
+                        <button className="btn btn-secondary" onClick={() => setIsNewClinicModalOpen(false)} disabled={submitting}>
                             Bekor qilish
                         </button>
-                        <button className="btn btn-primary" onClick={handleAddClinic}>
-                            Qo'shish
+                        <button className="btn btn-primary" onClick={handleAddClinic} disabled={submitting}>
+                            {submitting ? "Qo'shilmoqda..." : "Qo'shish"}
                         </button>
                     </div>
                 </div>

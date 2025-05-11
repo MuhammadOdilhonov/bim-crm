@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { mockRequests } from "../../data/mockData"
+import { getAllContactRequests, updateContactRequestStatus } from "../../api/apiQuestions"
 import Modal from "../../components/Modal"
 import Pagination from "../../components/Pagination"
 
 const ClientRequests = () => {
-    const [requests, setRequests] = useState(mockRequests)
+    const [requests, setRequests] = useState([])
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
     const [isContactedModalOpen, setIsContactedModalOpen] = useState(false)
@@ -15,34 +15,60 @@ const ClientRequests = () => {
     const [contactResult, setContactResult] = useState("")
     const [currentPage, setCurrentPage] = useState(0)
     const [itemsPerPage] = useState(5)
+    const [totalItems, setTotalItems] = useState(0)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
 
     useEffect(() => {
-        console.log("ClientRequests component mounted")
-    }, [])
+        fetchRequests()
+    }, [currentPage, searchTerm, statusFilter])
 
-    const filteredRequests = requests.filter((request) => {
-        const matchesSearch =
-            request.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            request.clinicName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            request.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const fetchRequests = async () => {
+        setLoading(true)
+        setError(null)
 
-        const matchesStatus = statusFilter === "all" || request.status === statusFilter
+        try {
+            const result = await getAllContactRequests(currentPage + 1, itemsPerPage, searchTerm, statusFilter)
 
-        return matchesSearch && matchesStatus
-    })
-
-    // Get current items for pagination
-    const indexOfLastItem = (currentPage + 1) * itemsPerPage
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage
-    const currentItems = filteredRequests.slice(indexOfFirstItem, indexOfLastItem)
+            if (result.success) {
+                setRequests(result.data.results)
+                setTotalItems(result.data.count)
+            } else {
+                setError(result.error)
+                setRequests([])
+            }
+        } catch (err) {
+            console.error("Error fetching requests:", err)
+            setError("Failed to load requests. Please try again later.")
+            setRequests([])
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const handleStatusChange = (id, newStatus) => {
-        if (newStatus === "contacted") {
+        if (newStatus === "connected") {
             const request = requests.find((r) => r.id === id)
             setSelectedRequest(request)
             setIsContactedModalOpen(true)
         } else {
-            setRequests(requests.map((request) => (request.id === id ? { ...request, status: newStatus } : request)))
+            updateRequestStatus(id, newStatus, "")
+        }
+    }
+
+    const updateRequestStatus = async (id, status, description = "") => {
+        try {
+            const result = await updateContactRequestStatus(id, status, description)
+
+            if (result.success) {
+                // Update the local state with the updated request
+                setRequests(requests.map((request) => (request.id === id ? { ...request, status: status } : request)))
+            } else {
+                setError(result.error)
+            }
+        } catch (err) {
+            console.error("Error updating request status:", err)
+            setError("Failed to update request status. Please try again later.")
         }
     }
 
@@ -52,11 +78,7 @@ const ClientRequests = () => {
             return
         }
 
-        setRequests(
-            requests.map((request) =>
-                request.id === selectedRequest.id ? { ...request, status: "contacted", contactResult: contactResult } : request,
-            ),
-        )
+        updateRequestStatus(selectedRequest.id, "connected", contactResult)
         setIsContactedModalOpen(false)
         setContactResult("")
     }
@@ -94,70 +116,78 @@ const ClientRequests = () => {
                             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                                 <option value="all">Barcha holatlar</option>
                                 <option value="new">Yangi</option>
-                                <option value="contacted">Bog'lanilgan</option>
+                                <option value="connected">Bog'lanilgan</option>
                             </select>
                         </div>
                     </div>
 
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Sana</th>
-                                <th>Ism</th>
-                                <th>Email</th>
-                                <th>Telefon</th>
-                                <th>Klinika nomi</th>
-                                <th>Holati</th>
-                                <th>Harakatlar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentItems.map((request) => (
-                                <tr key={request.id}>
-                                    <td>{new Date(request.date).toLocaleDateString()}</td>
-                                    <td>{request.name}</td>
-                                    <td>{request.email}</td>
-                                    <td>{request.phone}</td>
-                                    <td>{request.clinicName}</td>
-                                    <td>
-                                        <span className={`status ${request.status === "new" ? "pending" : "active"}`}>
-                                            {request.status === "new" ? "Yangi" : "Bog'lanilgan"}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="action-buttons">
-                                            <button className="btn btn-sm btn-secondary" onClick={() => handleViewRequest(request)}>
-                                                Ko'rish
-                                            </button>
+                    {loading ? (
+                        <div className="loading">Ma'lumotlar yuklanmoqda...</div>
+                    ) : error ? (
+                        <div className="error-message">{error}</div>
+                    ) : (
+                        <>
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sana</th>
+                                        <th>Ism</th>
+                                        <th>Email</th>
+                                        <th>Telefon</th>
+                                        <th>Klinika nomi</th>
+                                        <th>Holati</th>
+                                        <th>Harakatlar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {requests.map((request) => (
+                                        <tr key={request.id}>
+                                            <td>{new Date(request.created_at).toLocaleDateString()}</td>
+                                            <td>{request.name}</td>
+                                            <td>{request.email}</td>
+                                            <td>{request.phone_number}</td>
+                                            <td>{request.clinic_name}</td>
+                                            <td>
+                                                <span className={`status ${request.status === "new" ? "pending" : "active"}`}>
+                                                    {request.status === "new" ? "Yangi" : "Bog'lanilgan"}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="action-buttons">
+                                                    <button className="btn btn-sm btn-secondary" onClick={() => handleViewRequest(request)}>
+                                                        Ko'rish
+                                                    </button>
 
-                                            {request.status === "new" ? (
-                                                <button
-                                                    className="btn btn-sm btn-primary"
-                                                    onClick={() => handleStatusChange(request.id, "contacted")}
-                                                >
-                                                    Bog'lanildi
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    className="btn btn-sm btn-secondary"
-                                                    onClick={() => handleStatusChange(request.id, "new")}
-                                                >
-                                                    Qayta ochish
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                                    {request.status === "new" ? (
+                                                        <button
+                                                            className="btn btn-sm btn-primary"
+                                                            onClick={() => handleStatusChange(request.id, "connected")}
+                                                        >
+                                                            Bog'lanildi
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            className="btn btn-sm btn-secondary"
+                                                            onClick={() => handleStatusChange(request.id, "new")}
+                                                        >
+                                                            Qayta ochish
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
 
-                    <Pagination
-                        itemsPerPage={itemsPerPage}
-                        totalItems={filteredRequests.length}
-                        currentPage={currentPage}
-                        onPageChange={handlePageChange}
-                    />
+                            <Pagination
+                                itemsPerPage={itemsPerPage}
+                                totalItems={totalItems}
+                                currentPage={currentPage}
+                                onPageChange={handlePageChange}
+                            />
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -201,15 +231,15 @@ const ClientRequests = () => {
                             </div>
                             <div className="info-item">
                                 <div className="info-label">Telefon:</div>
-                                <div className="info-value">{selectedRequest.phone}</div>
+                                <div className="info-value">{selectedRequest.phone_number}</div>
                             </div>
                             <div className="info-item">
                                 <div className="info-label">Klinika nomi:</div>
-                                <div className="info-value">{selectedRequest.clinicName}</div>
+                                <div className="info-value">{selectedRequest.clinic_name}</div>
                             </div>
                             <div className="info-item">
                                 <div className="info-label">Sana:</div>
-                                <div className="info-value">{new Date(selectedRequest.date).toLocaleDateString()}</div>
+                                <div className="info-value">{new Date(selectedRequest.created_at).toLocaleDateString()}</div>
                             </div>
                             <div className="info-item">
                                 <div className="info-label">Holati:</div>
@@ -221,13 +251,17 @@ const ClientRequests = () => {
                             </div>
                         </div>
 
-                        <h4>Xabar:</h4>
-                        <div className="request-message">{selectedRequest.message}</div>
+                        {selectedRequest.message && (
+                            <>
+                                <h4>Xabar:</h4>
+                                <div className="request-message">{selectedRequest.message}</div>
+                            </>
+                        )}
 
-                        {selectedRequest.contactResult && (
+                        {selectedRequest.description && (
                             <>
                                 <h4>Bog'lanish natijasi:</h4>
-                                <div className="request-message">{selectedRequest.contactResult}</div>
+                                <div className="request-message">{selectedRequest.description}</div>
                             </>
                         )}
 
