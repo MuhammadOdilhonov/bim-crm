@@ -277,8 +277,20 @@ const ClinicDetails = () => {
                                             <div className="info-value">{financial.subscription_price.toLocaleString()} so'm</div>
                                         </div>
                                         <div className="info-item">
+                                            <div className="info-label">Chegirma miqdori</div>
+                                            <div className="info-value">{financial.discount_amount.toLocaleString()} so'm</div>
+                                        </div>
+                                        <div className="info-item">
                                             <div className="info-label">Ma'lumotlar bazasi xarajati</div>
                                             <div className="info-value">{financial.data_storage_cost.toLocaleString()} so'm</div>
+                                        </div>
+                                        <div className="info-item">
+                                            <div className="info-label">Ajratilgan saqlash xarajati</div>
+                                            <div className="info-value">{financial.allocated_storage_cost.toLocaleString()} so'm</div>
+                                        </div>
+                                        <div className="info-item">
+                                            <div className="info-label">Taxminiy foydalanilgan saqlash</div>
+                                            <div className="info-value">{financial.estimated_storage_used_gb} GB</div>
                                         </div>
                                         <div className="info-item">
                                             <div className="info-label">Sof foyda</div>
@@ -297,9 +309,25 @@ const ClinicDetails = () => {
 
                                         <div className="chart-bar">
                                             <div
+                                                className="chart-segment discount"
+                                                style={{ width: `${(financial.discount_amount / financial.subscription_price) * 100}%` }}
+                                                title={`Chegirma miqdori: ${financial.discount_amount.toLocaleString()} so'm`}
+                                            ></div>
+                                        </div>
+
+                                        <div className="chart-bar">
+                                            <div
                                                 className="chart-segment cost"
                                                 style={{ width: `${(financial.data_storage_cost / financial.subscription_price) * 100}%` }}
                                                 title={`Ma'lumotlar bazasi xarajati: ${financial.data_storage_cost.toLocaleString()} so'm`}
+                                            ></div>
+                                        </div>
+
+                                        <div className="chart-bar">
+                                            <div
+                                                className="chart-segment storage-cost"
+                                                style={{ width: `${(financial.allocated_storage_cost / financial.subscription_price) * 100}%` }}
+                                                title={`Ajratilgan saqlash xarajati: ${financial.allocated_storage_cost.toLocaleString()} so'm`}
                                             ></div>
                                         </div>
 

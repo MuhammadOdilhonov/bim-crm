@@ -1,7 +1,7 @@
 import axios from "axios"
 
-export const BaseUrl = "https://cliniccrm.pythonanywhere.com/api" // To'g'ri URLni tekshiring
-export const BaseUrlImg = "https://cliniccrm.pythonanywhere.com"
+export const BaseUrl = "https://med-crm-service.uz/api" // To'g'ri URLni tekshiring
+export const BaseUrlImg = "https://med-crm-service.uz"
 
 // Axios instance yaratish
 const client = axios.create({

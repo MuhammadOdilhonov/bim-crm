@@ -151,7 +151,7 @@ export const getTariffAssignmentHistory = async (page = 1, pageSize = 10) => {
 // Update tariff assignment status
 export const updateTariffAssignmentStatus = async (assignmentId, status) => {
   try {
-    const response = await client.patch(`/admin/clinic-subscription-history/${assignmentId}`, {
+      const response = await client.patch(`/admin/clinic-subscriptions/${assignmentId}/`, {
       status: status,
     })
 
