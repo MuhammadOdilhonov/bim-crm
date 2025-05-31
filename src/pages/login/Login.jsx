@@ -28,16 +28,24 @@ const Login = () => {
 
                 console.log("Login successful, user data:", result.user)
 
-                // Map API roles to application roles
-                const userRole = mapApiRoleToAppRole(result.user.role, result.user.is_superuser)
-
-                // Redirect based on mapped role
-                if (userRole === "SuperDirector") {
+                // Redirect based on user role
+                if (result.user.appRole === "SuperDirector") {
                     navigate("/super-director")
-                } else if (userRole === "SuperAdmin") {
+                } else if (result.user.appRole === "SuperAdmin") {
                     navigate("/super-admin")
                 } else {
-                    setError("You don't have permission to access the system.")
+                    // If the role is not recognized, check the raw role and superuser status
+                    if (result.user.is_superuser) {
+                        if (result.user.role === "director" || result.user.role === "doctor") {
+                            navigate("/super-director")
+                        } else if (result.user.role === "admin") {
+                            navigate("/super-admin")
+                        } else {
+                            setError("Sizning rolingiz tizimda aniqlanmadi.")
+                        }
+                    } else {
+                        setError("Sizda tizimga kirish uchun ruxsat yo'q.")
+                    }
                 }
             } else {
                 // Login failed
@@ -56,7 +64,7 @@ const Login = () => {
         console.log("Mapping role:", apiRole, "isSuperuser:", isSuperuser)
 
         if (isSuperuser) {
-            if (apiRole === "doctor") {
+            if (apiRole === "director" || apiRole === "doctor") {
                 return "SuperDirector"
             } else if (apiRole === "admin") {
                 return "SuperAdmin"

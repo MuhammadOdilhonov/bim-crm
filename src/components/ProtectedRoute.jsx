@@ -36,7 +36,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 // Helper function to map API roles to application roles
 const mapApiRoleToAppRole = (apiRole, isSuperuser) => {
     if (isSuperuser) {
-        if (apiRole === "doctor") {
+        if (apiRole === "director" || apiRole === "doctor") {
             return "SuperDirector"
         } else if (apiRole === "admin") {
             return "SuperAdmin"
