@@ -9,6 +9,7 @@ import {
     assignTariffToClinic,
     getTariffAssignmentHistory,
     updateTariffAssignmentStatus,
+    deleteTariffPlan,
 } from "../../api/apiTariffs"
 import Modal from "../../components/Modal"
 import Pagination from "../../components/Pagination"
@@ -21,6 +22,8 @@ const Tariffs = () => {
     const [statusFilter, setStatusFilter] = useState("all")
     const [isNewTariffModalOpen, setIsNewTariffModalOpen] = useState(false)
     const [isAssignTariffModalOpen, setIsAssignTariffModalOpen] = useState(false)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+    const [selectedTariffForDelete, setSelectedTariffForDelete] = useState(null)
     const [currentPage, setCurrentPage] = useState(0)
     const [itemsPerPage] = useState(5)
     const [assignmentsPage, setAssignmentsPage] = useState(0)
@@ -36,6 +39,10 @@ const Tariffs = () => {
         description: "",
         price: 0,
         storage_limit_gb: 5,
+        director_limit: 1,
+        admin_limit: 1,
+        doctor_limit: 5,
+        branch_limit: 1,
     })
 
     const [newAssignment, setNewAssignment] = useState({
@@ -158,7 +165,15 @@ const Tariffs = () => {
         const { name, value } = e.target
         setNewTariff({
             ...newTariff,
-            [name]: name === "price" || name === "storage_limit_gb" ? Number(value) : value,
+            [name]:
+                name === "price" ||
+                    name === "storage_limit_gb" ||
+                    name === "director_limit" ||
+                    name === "admin_limit" ||
+                    name === "doctor_limit" ||
+                    name === "branch_limit"
+                    ? Number(value)
+                    : value,
         })
     }
 
@@ -207,6 +222,10 @@ const Tariffs = () => {
                     description: "",
                     price: 0,
                     storage_limit_gb: 5,
+                    director_limit: 1,
+                    admin_limit: 1,
+                    doctor_limit: 5,
+                    branch_limit: 1,
                 })
                 setIsNewTariffModalOpen(false)
             } else {
@@ -272,6 +291,34 @@ const Tariffs = () => {
         } catch (err) {
             console.error("Error updating assignment status:", err)
             setAssignmentsError("Tarif holatini yangilashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.")
+        }
+    }
+
+    const handleDeleteTariff = (tariff) => {
+        setSelectedTariffForDelete(tariff)
+        setIsDeleteModalOpen(true)
+    }
+
+    const handleDeleteConfirm = async () => {
+        setSubmitting(true)
+        setError(null)
+
+        try {
+            const result = await deleteTariffPlan(selectedTariffForDelete.id)
+
+            if (result.success) {
+                // Remove the deleted tariff from the local state
+                setTariffs(tariffs.filter((tariff) => tariff.id !== selectedTariffForDelete.id))
+                setIsDeleteModalOpen(false)
+                setSelectedTariffForDelete(null)
+            } else {
+                setError(result.error)
+            }
+        } catch (err) {
+            console.error("Error deleting tariff:", err)
+            setError("Failed to delete tariff. Please try again later.")
+        } finally {
+            setSubmitting(false)
         }
     }
 
@@ -341,8 +388,7 @@ const Tariffs = () => {
                                     <th>Tavsif</th>
                                     <th>Saqlash hajmi</th>
                                     <th>Narxi (so'm)</th>
-                                    <th>Chegirma</th>
-                                    <th>Sinov muddati</th>
+                                    <th>Limitlar</th>
                                     <th>Harakatlar</th>
                                 </tr>
                             </thead>
@@ -353,8 +399,14 @@ const Tariffs = () => {
                                         <td>{tariff.description || "-"}</td>
                                         <td>{tariff.storage_limit_gb} GB</td>
                                         <td>{tariff.price.toLocaleString()}</td>
-                                        <td>{tariff.discount ? `${tariff.discount}%` : "-"}</td>
-                                        <td>{tariff.trial_period_days ? `${tariff.trial_period_days} kun` : "-"}</td>
+                                        <td>
+                                            <div className="limits-info">
+                                                <div>Direktor: {tariff.director_limit || 1}</div>
+                                                <div>Admin: {tariff.admin_limit || 1}</div>
+                                                <div>Shifokor: {tariff.doctor_limit || 5}</div>
+                                                <div>Filial: {tariff.branch_limit || 1}</div>
+                                            </div>
+                                        </td>
                                         <td>
                                             <div className="action-buttons">
                                                 <button
@@ -369,6 +421,9 @@ const Tariffs = () => {
                                                     }}
                                                 >
                                                     Ulash
+                                                </button>
+                                                <button className="btn btn-sm btn-danger" onClick={() => handleDeleteTariff(tariff)}>
+                                                    O'chirish
                                                 </button>
                                             </div>
                                         </td>
@@ -469,12 +524,17 @@ const Tariffs = () => {
             </div>
 
             {/* New Tariff Modal */}
-            <Modal isOpen={isNewTariffModalOpen} onClose={() => setIsNewTariffModalOpen(false)} title="Yangi tarif qo'shish">
+            <Modal
+                isOpen={isNewTariffModalOpen}
+                onClose={() => setIsNewTariffModalOpen(false)}
+                title="Yangi tarif qo'shish"
+                size="lg"
+            >
                 <div className="modal-form">
                     {error && <div className="error-message">{error}</div>}
 
                     <div className="form-group">
-                        <label htmlFor="name">Tarif nomi</label>
+                        <label htmlFor="name">Tarif nomi *</label>
                         <input
                             type="text"
                             id="name"
@@ -497,7 +557,7 @@ const Tariffs = () => {
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label htmlFor="storage_limit_gb">Saqlash hajmi (GB)</label>
+                            <label htmlFor="storage_limit_gb">Saqlash hajmi (GB) *</label>
                             <input
                                 type="number"
                                 id="storage_limit_gb"
@@ -511,7 +571,7 @@ const Tariffs = () => {
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="price">Narxi (so'm)</label>
+                            <label htmlFor="price">Narxi (so'm) *</label>
                             <input
                                 type="number"
                                 id="price"
@@ -521,6 +581,62 @@ const Tariffs = () => {
                                 value={newTariff.price}
                                 onChange={handleTariffInputChange}
                                 required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="director_limit">Direktor limiti</label>
+                            <input
+                                type="number"
+                                id="director_limit"
+                                name="director_limit"
+                                min="1"
+                                max="10"
+                                value={newTariff.director_limit}
+                                onChange={handleTariffInputChange}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="admin_limit">Admin limiti</label>
+                            <input
+                                type="number"
+                                id="admin_limit"
+                                name="admin_limit"
+                                min="1"
+                                max="50"
+                                value={newTariff.admin_limit}
+                                onChange={handleTariffInputChange}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="doctor_limit">Shifokor limiti</label>
+                            <input
+                                type="number"
+                                id="doctor_limit"
+                                name="doctor_limit"
+                                min="1"
+                                max="100"
+                                value={newTariff.doctor_limit}
+                                onChange={handleTariffInputChange}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="branch_limit">Filial limiti</label>
+                            <input
+                                type="number"
+                                id="branch_limit"
+                                name="branch_limit"
+                                min="1"
+                                max="20"
+                                value={newTariff.branch_limit}
+                                onChange={handleTariffInputChange}
                             />
                         </div>
                     </div>
@@ -690,6 +806,31 @@ const Tariffs = () => {
                             disabled={submitting || !newAssignment.clinic || !newAssignment.plan}
                         >
                             {submitting ? "Ulash..." : "Ulash"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Tarifni o'chirish">
+                <div className="modal-form">
+                    {error && <div className="error-message">{error}</div>}
+
+                    {selectedTariffForDelete && (
+                        <>
+                            <p>Haqiqatan ham "{selectedTariffForDelete.name}" tarifini o'chirmoqchimisiz?</p>
+                            <p style={{ color: "#e74c3c", fontSize: "14px" }}>
+                                Bu amal qaytarib bo'lmaydi va barcha ma'lumotlar yo'qoladi.
+                            </p>
+                        </>
+                    )}
+
+                    <div className="form-actions">
+                        <button className="btn btn-secondary" onClick={() => setIsDeleteModalOpen(false)} disabled={submitting}>
+                            Bekor qilish
+                        </button>
+                        <button className="btn btn-danger" onClick={handleDeleteConfirm} disabled={submitting}>
+                            {submitting ? "O'chirilmoqda..." : "O'chirish"}
                         </button>
                     </div>
                 </div>

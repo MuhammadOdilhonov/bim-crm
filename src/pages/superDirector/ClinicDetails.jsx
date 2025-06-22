@@ -1,29 +1,52 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import {
     getClinicDetails,
     getClinicSubscription,
     getClinicFinancial,
     getClinicBranches,
     getBranchStatistics,
+    getClinicSubscriptionHistory,
+    updateClinicDetails,
+    deleteClinic,
 } from "../../api/apiClinics"
+import Modal from "../../components/Modal"
+import Pagination from "../../components/Pagination"
 
 const ClinicDetails = () => {
     const { id } = useParams()
+    const navigate = useNavigate()
     const [clinic, setClinic] = useState(null)
     const [subscription, setSubscription] = useState(null)
     const [financial, setFinancial] = useState(null)
     const [branches, setBranches] = useState([])
     const [branchStats, setBranchStats] = useState([])
+    const [subscriptionHistory, setSubscriptionHistory] = useState([])
+    const [totalSubscriptionHistory, setTotalSubscriptionHistory] = useState(0)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [activeTab, setActiveTab] = useState("general")
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+    const [editFormData, setEditFormData] = useState({})
+    const [submitting, setSubmitting] = useState(false)
+
+    // Subscription history pagination
+    const [subscriptionHistoryPage, setSubscriptionHistoryPage] = useState(0)
+    const [subscriptionHistoryPerPage] = useState(5)
+    const [subscriptionHistoryLoading, setSubscriptionHistoryLoading] = useState(false)
 
     useEffect(() => {
         fetchClinicData()
     }, [id])
+
+    useEffect(() => {
+        if (activeTab === "subscription") {
+            fetchSubscriptionHistory()
+        }
+    }, [activeTab, subscriptionHistoryPage])
 
     const fetchClinicData = async () => {
         setLoading(true)
@@ -34,6 +57,13 @@ const ClinicDetails = () => {
             const clinicResult = await getClinicDetails(id)
             if (clinicResult.success) {
                 setClinic(clinicResult.data)
+                setEditFormData({
+                    clinic_name: clinicResult.data.clinic_name,
+                    director: clinicResult.data.director,
+                    address: clinicResult.data.address,
+                    phone: clinicResult.data.phone,
+                    email: clinicResult.data.email,
+                })
             } else {
                 setError(clinicResult.error || "Failed to fetch clinic details")
                 return
@@ -77,9 +107,76 @@ const ClinicDetails = () => {
         }
     }
 
+    const fetchSubscriptionHistory = async () => {
+        setSubscriptionHistoryLoading(true)
+
+        try {
+            const result = await getClinicSubscriptionHistory(id, subscriptionHistoryPage + 1, subscriptionHistoryPerPage)
+            if (result.success) {
+                setSubscriptionHistory(result.data.results || [])
+                setTotalSubscriptionHistory(result.data.count || 0)
+            }
+        } catch (err) {
+            console.error("Error fetching subscription history:", err)
+        } finally {
+            setSubscriptionHistoryLoading(false)
+        }
+    }
+
     const handleTabChange = async (tab) => {
         setActiveTab(tab)
         await fetchTabData(tab)
+    }
+
+    const handleEditInputChange = (e) => {
+        const { name, value } = e.target
+        setEditFormData({
+            ...editFormData,
+            [name]: value,
+        })
+    }
+
+    const handleEditSubmit = async () => {
+        setSubmitting(true)
+        setError(null)
+
+        try {
+            const result = await updateClinicDetails(id, editFormData)
+            if (result.success) {
+                setClinic({ ...clinic, ...editFormData })
+                setIsEditModalOpen(false)
+            } else {
+                setError(result.error)
+            }
+        } catch (err) {
+            console.error("Error updating clinic:", err)
+            setError("Failed to update clinic. Please try again later.")
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    const handleDelete = async () => {
+        setSubmitting(true)
+        setError(null)
+
+        try {
+            const result = await deleteClinic(id)
+            if (result.success) {
+                navigate("/super-director/clinics")
+            } else {
+                setError(result.error)
+            }
+        } catch (err) {
+            console.error("Error deleting clinic:", err)
+            setError("Failed to delete clinic. Please try again later.")
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    const handleSubscriptionHistoryPageChange = (selectedPage) => {
+        setSubscriptionHistoryPage(selectedPage)
     }
 
     if (loading) {
@@ -116,7 +213,12 @@ const ClinicDetails = () => {
                     <Link to="/super-director/clinics">Klinikalar</Link> / {clinic.clinic_name}
                 </div>
                 <div className="header-actions">
-                    <button className="btn btn-secondary">Tahrirlash</button>
+                    <button className="btn btn-secondary" onClick={() => setIsEditModalOpen(true)}>
+                        Tahrirlash
+                    </button>
+                    <button className="btn btn-danger" onClick={() => setIsDeleteModalOpen(true)}>
+                        O'chirish
+                    </button>
                 </div>
             </div>
 
@@ -342,6 +444,62 @@ const ClinicDetails = () => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Subscription History */}
+                        <div className="grid-col-12">
+                            <div className="dashboard-card">
+                                <div className="card-header">
+                                    <h2>Obuna tarixi</h2>
+                                </div>
+                                <div className="card-body">
+                                    {subscriptionHistoryLoading ? (
+                                        <div className="loading">Ma'lumotlar yuklanmoqda...</div>
+                                    ) : (
+                                        <>
+                                            {subscriptionHistory.length === 0 ? (
+                                                <div className="no-data">Obuna tarixi mavjud emas</div>
+                                            ) : (
+                                                <table className="data-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Tarif rejasi</th>
+                                                            <th>Boshlanish sanasi</th>
+                                                            <th>Tugash sanasi</th>
+                                                            <th>Holati</th>
+                                                            <th>Chegirma</th>
+                                                            <th>To'langan summa</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {subscriptionHistory.map((history, index) => (
+                                                            <tr key={index}>
+                                                                <td>{history.plan}</td>
+                                                                <td>{new Date(history.start_date).toLocaleDateString()}</td>
+                                                                <td>{new Date(history.end_date).toLocaleDateString()}</td>
+                                                                <td>
+                                                                    <span className={`status ${history.status === "active" ? "active" : "inactive"}`}>
+                                                                        {history.status === "active" ? "Faol" : "Tugagan"}
+                                                                    </span>
+                                                                </td>
+                                                                <td>{history.discount || "Yo'q"}</td>
+                                                                <td>{Number(history.paid_amount).toLocaleString()} so'm</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            )}
+
+                                            <Pagination
+                                                itemsPerPage={subscriptionHistoryPerPage}
+                                                totalItems={totalSubscriptionHistory}
+                                                currentPage={subscriptionHistoryPage}
+                                                onPageChange={handleSubscriptionHistoryPageChange}
+                                            />
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -453,6 +611,107 @@ const ClinicDetails = () => {
                     </div>
                 )}
             </div>
+
+            {/* Edit Modal */}
+            <Modal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                title="Klinika ma'lumotlarini tahrirlash"
+            >
+                <div className="modal-form">
+                    {error && <div className="error-message">{error}</div>}
+
+                    <div className="form-group">
+                        <label htmlFor="clinic_name">Klinika nomi</label>
+                        <input
+                            type="text"
+                            id="clinic_name"
+                            name="clinic_name"
+                            value={editFormData.clinic_name || ""}
+                            onChange={handleEditInputChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="director">Direktor</label>
+                        <input
+                            type="text"
+                            id="director"
+                            name="director"
+                            value={editFormData.director || ""}
+                            onChange={handleEditInputChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="address">Manzil</label>
+                        <input
+                            type="text"
+                            id="address"
+                            name="address"
+                            value={editFormData.address || ""}
+                            onChange={handleEditInputChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="phone">Telefon</label>
+                        <input
+                            type="text"
+                            id="phone"
+                            name="phone"
+                            value={editFormData.phone || ""}
+                            onChange={handleEditInputChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value={editFormData.email || ""}
+                            onChange={handleEditInputChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-actions">
+                        <button className="btn btn-secondary" onClick={() => setIsEditModalOpen(false)} disabled={submitting}>
+                            Bekor qilish
+                        </button>
+                        <button className="btn btn-primary" onClick={handleEditSubmit} disabled={submitting}>
+                            {submitting ? "Saqlanmoqda..." : "Saqlash"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Klinikani o'chirish">
+                <div className="modal-form">
+                    {error && <div className="error-message">{error}</div>}
+
+                    <p>Haqiqatan ham "{clinic.clinic_name}" klinikasini o'chirmoqchimisiz?</p>
+                    <p style={{ color: "#e74c3c", fontSize: "14px" }}>
+                        Bu amal qaytarib bo'lmaydi va barcha ma'lumotlar yo'qoladi.
+                    </p>
+
+                    <div className="form-actions">
+                        <button className="btn btn-secondary" onClick={() => setIsDeleteModalOpen(false)} disabled={submitting}>
+                            Bekor qilish
+                        </button>
+                        <button className="btn btn-danger" onClick={handleDelete} disabled={submitting}>
+                            {submitting ? "O'chirilmoqda..." : "O'chirish"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     )
 }

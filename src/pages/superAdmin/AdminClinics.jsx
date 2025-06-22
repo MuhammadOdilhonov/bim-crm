@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getAllClinics, createClinic } from "../../api/apiClinics"
+import { getAllClinics, createClinicWithImage } from "../../api/apiClinics"
 import Modal from "../../components/Modal"
 import Pagination from "../../components/Pagination"
 
@@ -11,10 +11,13 @@ const AdminClinics = () => {
     const [statusFilter, setStatusFilter] = useState("all")
     const [isNewClinicModalOpen, setIsNewClinicModalOpen] = useState(false)
     const [newClinic, setNewClinic] = useState({
-        name: "",
+        clinic_name: "",
         email: "",
         phone: "",
-        licenseNumber: "",
+        license_number: "",
+        address: "",
+        director: "",
+        image: null,
     })
     const [currentPage, setCurrentPage] = useState(0)
     const [itemsPerPage] = useState(5)
@@ -22,6 +25,7 @@ const AdminClinics = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [submitting, setSubmitting] = useState(false)
+    const [imagePreview, setImagePreview] = useState(null)
 
     useEffect(() => {
         fetchClinics()
@@ -58,10 +62,34 @@ const AdminClinics = () => {
         })
     }
 
+    const handleImageChange = (e) => {
+        const file = e.target.files[0]
+        if (file) {
+            setNewClinic({
+                ...newClinic,
+                image: file,
+            })
+
+            // Create preview
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setImagePreview(reader.result)
+            }
+            reader.readAsDataURL(file)
+        }
+    }
+
     const handleAddClinic = async () => {
         // Validate form
-        if (!newClinic.name || !newClinic.email || !newClinic.phone || !newClinic.licenseNumber) {
-            alert("Iltimos, barcha maydonlarni to'ldiring")
+        if (
+            !newClinic.clinic_name ||
+            !newClinic.email ||
+            !newClinic.phone ||
+            !newClinic.license_number ||
+            !newClinic.address ||
+            !newClinic.director
+        ) {
+            alert("Iltimos, barcha majburiy maydonlarni to'ldiring")
             return
         }
 
@@ -69,16 +97,8 @@ const AdminClinics = () => {
         setError(null)
 
         try {
-            // Prepare data for API
-            const clinicData = {
-                clinic_name: newClinic.name,
-                email: newClinic.email,
-                phone: newClinic.phone,
-                license_number: newClinic.licenseNumber,
-            }
-
-            // Call API to create clinic
-            const result = await createClinic(clinicData)
+            // Call API to create clinic with image
+            const result = await createClinicWithImage(newClinic)
 
             if (result.success) {
                 // Refresh the clinics list
@@ -86,11 +106,15 @@ const AdminClinics = () => {
 
                 // Reset form and close modal
                 setNewClinic({
-                    name: "",
+                    clinic_name: "",
                     email: "",
                     phone: "",
-                    licenseNumber: "",
+                    license_number: "",
+                    address: "",
+                    director: "",
+                    image: null,
                 })
+                setImagePreview(null)
                 setIsNewClinicModalOpen(false)
             } else {
                 setError(result.error || "Klinika yaratishda xatolik yuz berdi")
@@ -245,41 +269,115 @@ const AdminClinics = () => {
             {/* New Clinic Modal */}
             <Modal
                 isOpen={isNewClinicModalOpen}
-                onClose={() => setIsNewClinicModalOpen(false)}
+                onClose={() => {
+                    setIsNewClinicModalOpen(false)
+                    setImagePreview(null)
+                }}
                 title="Yangi klinika qo'shish"
+                size="lg"
             >
                 <div className="modal-form">
                     {error && <div className="error-message">{error}</div>}
 
-                    <div className="form-group">
-                        <label htmlFor="name">Klinika nomi</label>
-                        <input type="text" id="name" name="name" value={newClinic.name} onChange={handleInputChange} required />
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="clinic_name">Klinika nomi *</label>
+                            <input
+                                type="text"
+                                id="clinic_name"
+                                name="clinic_name"
+                                value={newClinic.clinic_name}
+                                onChange={handleInputChange}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="director">Direktor *</label>
+                            <input
+                                type="text"
+                                id="director"
+                                name="director"
+                                value={newClinic.director}
+                                onChange={handleInputChange}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="email">Elektron pochta *</label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value={newClinic.email}
+                                onChange={handleInputChange}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="phone">Telefon raqami *</label>
+                            <input
+                                type="text"
+                                id="phone"
+                                name="phone"
+                                value={newClinic.phone}
+                                onChange={handleInputChange}
+                                required
+                            />
+                        </div>
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="email">Elektron pochta</label>
-                        <input type="email" id="email" name="email" value={newClinic.email} onChange={handleInputChange} required />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="phone">Telefon raqami</label>
-                        <input type="text" id="phone" name="phone" value={newClinic.phone} onChange={handleInputChange} required />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="licenseNumber">Litsenziya raqami</label>
+                        <label htmlFor="address">Manzil *</label>
                         <input
                             type="text"
-                            id="licenseNumber"
-                            name="licenseNumber"
-                            value={newClinic.licenseNumber}
+                            id="address"
+                            name="address"
+                            value={newClinic.address}
                             onChange={handleInputChange}
                             required
                         />
                     </div>
 
+                    <div className="form-group">
+                        <label htmlFor="license_number">Litsenziya raqami *</label>
+                        <input
+                            type="text"
+                            id="license_number"
+                            name="license_number"
+                            value={newClinic.license_number}
+                            onChange={handleInputChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="image">Klinika rasmi</label>
+                        <input type="file" id="image" name="image" accept="image/*" onChange={handleImageChange} />
+                        {imagePreview && (
+                            <div className="image-preview">
+                                <img
+                                    src={imagePreview || "/placeholder.svg"}
+                                    alt="Preview"
+                                    style={{ maxWidth: "200px", maxHeight: "200px", marginTop: "10px" }}
+                                />
+                            </div>
+                        )}
+                    </div>
+
                     <div className="form-actions">
-                        <button className="btn btn-secondary" onClick={() => setIsNewClinicModalOpen(false)} disabled={submitting}>
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => {
+                                setIsNewClinicModalOpen(false)
+                                setImagePreview(null)
+                            }}
+                            disabled={submitting}
+                        >
                             Bekor qilish
                         </button>
                         <button className="btn btn-primary" onClick={handleAddClinic} disabled={submitting}>

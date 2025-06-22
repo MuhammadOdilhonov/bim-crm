@@ -151,7 +151,7 @@ export const getTariffAssignmentHistory = async (page = 1, pageSize = 10) => {
 // Update tariff assignment status
 export const updateTariffAssignmentStatus = async (assignmentId, status) => {
   try {
-      const response = await client.patch(`/admin/clinic-subscriptions/${assignmentId}/`, {
+    const response = await client.patch(`/admin/clinic-subscriptions/${assignmentId}/`, {
       status: status,
     })
 
@@ -165,6 +165,25 @@ export const updateTariffAssignmentStatus = async (assignmentId, status) => {
     return {
       success: false,
       error: error.response?.data?.error || "Failed to update tariff assignment status",
+    }
+  }
+}
+
+// Delete tariff plan
+export const deleteTariffPlan = async (tariffId) => {
+  try {
+    const response = await client.delete(`/admin/subscription-plans/${tariffId}/`)
+
+    console.log("API response - deleteTariffPlan:", response.data)
+    return {
+      success: true,
+      data: response.data,
+    }
+  } catch (error) {
+    console.error("Error deleting tariff plan:", error.response?.data || error.message)
+    return {
+      success: false,
+      error: error.response?.data?.error || "Failed to delete tariff plan",
     }
   }
 }

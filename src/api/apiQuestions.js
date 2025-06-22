@@ -66,3 +66,22 @@ export const getContactRequestDetails = async (requestId) => {
         }
     }
 }
+
+// Delete contact request
+export const deleteContactRequest = async (requestId) => {
+    try {
+        const response = await client.delete(`/contact-requests/${requestId}/`)
+
+        console.log("API response - deleteContactRequest:", response.data)
+        return {
+            success: true,
+            data: response.data,
+        }
+    } catch (error) {
+        console.error("Error deleting contact request:", error.response?.data || error.message)
+        return {
+            success: false,
+            error: error.response?.data?.error || "Failed to delete contact request",
+        }
+    }
+}

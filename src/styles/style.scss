@@ -9,8 +9,10 @@
 @import './components_styles/header';
 @import './components_styles/dashboard';
 @import './components_styles/search-select';
-@import url('./pages_styles/_login.scss');
 @import url('./components_styles/_pagination.scss');
+
+@import url('./pages_styles/common_pages_styles.scss');
+@import url('./pages_styles/_login.scss');
 @import url('./pages_styles/_tariffs.scss');
 
 // Reset and base styles
@@ -1434,5 +1436,43 @@ a {
             display: flex;
             gap: 10px;
         }
+    }
+}
+
+// Add styles for limits info and image preview
+.limits-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12px;
+
+    div {
+        color: #666;
+    }
+}
+
+.image-preview {
+    margin-top: 10px;
+
+    img {
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+}
+
+// Form row styles for better layout
+.form-row {
+    display: flex;
+    gap: 15px;
+
+    .form-group {
+        flex: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
     }
 }

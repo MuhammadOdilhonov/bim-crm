@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getAllContactRequests, updateContactRequestStatus } from "../../api/apiQuestions"
+import { getAllContactRequests, updateContactRequestStatus, deleteContactRequest } from "../../api/apiQuestions"
 import Modal from "../../components/Modal"
 import Pagination from "../../components/Pagination"
 
@@ -11,6 +11,7 @@ const ClientRequests = () => {
     const [statusFilter, setStatusFilter] = useState("all")
     const [isContactedModalOpen, setIsContactedModalOpen] = useState(false)
     const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
     const [selectedRequest, setSelectedRequest] = useState(null)
     const [contactResult, setContactResult] = useState("")
     const [currentPage, setCurrentPage] = useState(0)
@@ -18,6 +19,7 @@ const ClientRequests = () => {
     const [totalItems, setTotalItems] = useState(0)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [submitting, setSubmitting] = useState(false)
 
     useEffect(() => {
         fetchRequests()
@@ -86,6 +88,34 @@ const ClientRequests = () => {
     const handleViewRequest = (request) => {
         setSelectedRequest(request)
         setIsViewModalOpen(true)
+    }
+
+    const handleDeleteRequest = (request) => {
+        setSelectedRequest(request)
+        setIsDeleteModalOpen(true)
+    }
+
+    const handleDeleteConfirm = async () => {
+        setSubmitting(true)
+        setError(null)
+
+        try {
+            const result = await deleteContactRequest(selectedRequest.id)
+
+            if (result.success) {
+                // Remove the deleted request from the local state
+                setRequests(requests.filter((request) => request.id !== selectedRequest.id))
+                setIsDeleteModalOpen(false)
+                setSelectedRequest(null)
+            } else {
+                setError(result.error)
+            }
+        } catch (err) {
+            console.error("Error deleting request:", err)
+            setError("Failed to delete request. Please try again later.")
+        } finally {
+            setSubmitting(false)
+        }
     }
 
     const handlePageChange = (selectedPage) => {
@@ -173,6 +203,10 @@ const ClientRequests = () => {
                                                             Qayta ochish
                                                         </button>
                                                     )}
+
+                                                    <button className="btn btn-sm btn-danger" onClick={() => handleDeleteRequest(request)}>
+                                                        O'chirish
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -272,6 +306,31 @@ const ClientRequests = () => {
                         </div>
                     </div>
                 )}
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="So'rovni o'chirish">
+                <div className="modal-form">
+                    {error && <div className="error-message">{error}</div>}
+
+                    {selectedRequest && (
+                        <>
+                            <p>Haqiqatan ham "{selectedRequest.name}" so'rovini o'chirmoqchimisiz?</p>
+                            <p style={{ color: "#e74c3c", fontSize: "14px" }}>
+                                Bu amal qaytarib bo'lmaydi va barcha ma'lumotlar yo'qoladi.
+                            </p>
+                        </>
+                    )}
+
+                    <div className="form-actions">
+                        <button className="btn btn-secondary" onClick={() => setIsDeleteModalOpen(false)} disabled={submitting}>
+                            Bekor qilish
+                        </button>
+                        <button className="btn btn-danger" onClick={handleDeleteConfirm} disabled={submitting}>
+                            {submitting ? "O'chirilmoqda..." : "O'chirish"}
+                        </button>
+                    </div>
+                </div>
             </Modal>
         </div>
     )

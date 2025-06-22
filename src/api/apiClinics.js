@@ -139,3 +139,102 @@ export const createClinic = async (clinicData) => {
         }
     }
 }
+
+// Get clinic subscription history
+export const getClinicSubscriptionHistory = async (clinicId, page = 1, pageSize = 10) => {
+    try {
+        const response = await client.get(`admin/clinic/${clinicId}/subscription-history/`, {
+            params: {
+                page,
+                page_size: pageSize,
+            },
+        })
+
+        console.log("API response - getClinicSubscriptionHistory:", response.data)
+        return {
+            success: true,
+            data: response.data,
+        }
+    } catch (error) {
+        console.error("Error fetching clinic subscription history:", error.response?.data || error.message)
+        return {
+            success: false,
+            error: error.response?.data?.error || "Failed to fetch clinic subscription history",
+        }
+    }
+}
+
+// Update clinic details
+export const updateClinicDetails = async (clinicId, clinicData) => {
+    try {
+        const response = await client.patch(`admin/clinics/${clinicId}/`, clinicData)
+
+        console.log("API response - updateClinicDetails:", response.data)
+        return {
+            success: true,
+            data: response.data,
+        }
+    } catch (error) {
+        console.error("Error updating clinic details:", error.response?.data || error.message)
+        return {
+            success: false,
+            error: error.response?.data?.error || "Failed to update clinic details",
+        }
+    }
+}
+
+// Delete clinic
+export const deleteClinic = async (clinicId) => {
+    try {
+        const response = await client.delete(`admin/clinics/${clinicId}/`)
+
+        console.log("API response - deleteClinic:", response.data)
+        return {
+            success: true,
+            data: response.data,
+        }
+    } catch (error) {
+        console.error("Error deleting clinic:", error.response?.data || error.message)
+        return {
+            success: false,
+            error: error.response?.data?.error || "Failed to delete clinic",
+        }
+    }
+}
+
+// Create a new clinic with image
+export const createClinicWithImage = async (clinicData) => {
+    try {
+        const formData = new FormData()
+
+        // Add text fields
+        Object.keys(clinicData).forEach((key) => {
+            if (key !== "image" && clinicData[key] !== null && clinicData[key] !== undefined) {
+                formData.append(key, clinicData[key])
+            }
+        })
+
+        // Add image if provided
+        if (clinicData.image) {
+            formData.append("image", clinicData.image)
+        }
+
+        const response = await client.post("/clinics/", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        })
+
+        console.log("API response - createClinicWithImage:", response.data)
+        return {
+            success: true,
+            data: response.data,
+        }
+    } catch (error) {
+        console.error("Error creating clinic with image:", error.response?.data || error.message)
+        return {
+            success: false,
+            error: error.response?.data?.error || "Failed to create clinic",
+        }
+    }
+}
