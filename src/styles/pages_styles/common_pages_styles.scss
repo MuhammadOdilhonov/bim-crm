@@ -1,6 +1,7 @@
 // Common styles for all pages
 @import '../variables';
 @import url('./_inactive-clinics.scss');
+@import './clinic-details';
 // Table styles
 .data-table {
     width: 100%;

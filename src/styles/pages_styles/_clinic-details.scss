@@ -1,0 +1,684 @@
+.clinic-details-page {
+    padding: 20px;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+
+        .breadcrumbs {
+            font-size: 14px;
+            color: #6c757d;
+
+            a {
+                color: #007bff;
+                text-decoration: none;
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+    }
+
+    .clinic-header {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 24px;
+
+        .clinic-info {
+            h1 {
+                color: #2c3e50;
+                font-size: 2rem;
+                font-weight: 600;
+                margin: 0 0 12px 0;
+            }
+
+            .clinic-meta {
+                display: flex;
+                gap: 20px;
+                align-items: center;
+
+                .status {
+                    padding: 6px 12px;
+                    border-radius: 20px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+
+                    &.active {
+                        background-color: #d4edda;
+                        color: #155724;
+                    }
+
+                    &.inactive {
+                        background-color: #f8d7da;
+                        color: #721c24;
+                    }
+                }
+
+                .director {
+                    color: #6c757d;
+                    font-size: 0.9rem;
+                }
+            }
+        }
+    }
+
+    .tabs {
+        display: flex;
+        background: white;
+        border-radius: 12px 12px 0 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+
+        .tab {
+            flex: 1;
+            padding: 16px 20px;
+            background: none;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+
+            &:hover {
+                background-color: #f8f9fa;
+                color: #495057;
+            }
+
+            &.active {
+                color: #007bff;
+                background-color: #f8f9fa;
+                border-bottom-color: #007bff;
+            }
+        }
+    }
+
+    .tab-content {
+        background: white;
+        border-radius: 0 0 12px 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        gap: 24px;
+
+        &.grid-col-6 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        &.grid-col-12 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .dashboard-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        overflow: hidden;
+
+        .card-header {
+            background: white;
+            padding: 16px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            h2 {
+                margin: 0;
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #2c3e50;
+            }
+        }
+
+        .card-body {
+            padding: 20px;
+            background: white;
+        }
+    }
+
+    .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+
+            &:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+
+            .info-label {
+                font-weight: 500;
+                color: #6c757d;
+                font-size: 0.9rem;
+            }
+
+            .info-value {
+                color: #2c3e50;
+                font-weight: 500;
+
+                &.profit {
+                    color: #28a745;
+                    font-weight: 600;
+                }
+            }
+        }
+    }
+
+    .storage-info {
+        .storage-usage {
+            margin-bottom: 20px;
+
+            .usage-label {
+                font-size: 0.9rem;
+                color: #6c757d;
+                margin-bottom: 8px;
+            }
+
+            .usage-bar {
+                height: 8px;
+                background-color: #e9ecef;
+                border-radius: 4px;
+                overflow: hidden;
+                margin-bottom: 8px;
+
+                .usage-progress {
+                    height: 100%;
+                    background: linear-gradient(90deg, #28a745, #20c997);
+                    transition: width 0.3s ease;
+                }
+            }
+
+            .usage-value {
+                font-weight: 600;
+                color: #2c3e50;
+            }
+        }
+
+        .storage-details {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+
+            .storage-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+
+                .storage-label {
+                    color: #6c757d;
+                    font-size: 0.9rem;
+                }
+
+                .storage-value {
+                    font-weight: 500;
+                    color: #2c3e50;
+                }
+            }
+        }
+    }
+
+    .financial-chart {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .chart-bar {
+            height: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+
+            .chart-segment {
+                height: 100%;
+                border-radius: 10px;
+                transition: width 0.3s ease;
+
+                &.revenue {
+                    background: linear-gradient(90deg, #007bff, #0056b3);
+                }
+
+                &.discount {
+                    background: linear-gradient(90deg, #ffc107, #e0a800);
+                }
+
+                &.cost {
+                    background: linear-gradient(90deg, #dc3545, #c82333);
+                }
+
+                &.storage-cost {
+                    background: linear-gradient(90deg, #fd7e14, #e55a00);
+                }
+
+                &.profit {
+                    background: linear-gradient(90deg, #28a745, #1e7e34);
+                }
+            }
+        }
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+
+        thead {
+            background-color: #f8f9fa;
+
+            th {
+                padding: 12px;
+                text-align: left;
+                font-weight: 600;
+                color: #495057;
+                font-size: 0.9rem;
+                border-bottom: 2px solid #dee2e6;
+            }
+        }
+
+        tbody {
+            tr {
+                border-bottom: 1px solid #dee2e6;
+
+                &:hover {
+                    background-color: #f8f9fa;
+                }
+            }
+
+            td {
+                padding: 12px;
+                font-size: 0.9rem;
+                color: #495057;
+            }
+        }
+    }
+
+    .branches-stats {
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+
+            .branch-stat-card {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                border-left: 4px solid #007bff;
+
+                .branch-name {
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    color: #2c3e50;
+                    margin-bottom: 16px;
+                }
+
+                .branch-staff,
+                .branch-patients {
+                    margin-bottom: 16px;
+
+                    .staff-count,
+                    .patient-count {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        margin-bottom: 8px;
+
+                        .count {
+                            font-size: 1.5rem;
+                            font-weight: 700;
+                            color: #007bff;
+                        }
+
+                        .label {
+                            color: #6c757d;
+                            font-size: 0.9rem;
+                        }
+                    }
+
+                    .staff-breakdown,
+                    .patient-breakdown {
+                        display: flex;
+                        gap: 16px;
+
+                        .breakdown-item {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+
+                            .count {
+                                font-size: 1rem;
+                                font-weight: 600;
+                                color: #495057;
+                            }
+
+                            .label {
+                                font-size: 0.8rem;
+                                color: #6c757d;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .notification-form {
+        .form-group {
+            margin-bottom: 20px;
+
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+                color: #495057;
+                font-size: 0.9rem;
+            }
+
+            .form-input,
+            .form-textarea {
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #dee2e6;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                transition: border-color 0.3s ease;
+
+                &:focus {
+                    outline: none;
+                    border-color: #007bff;
+                    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+                }
+
+                &:disabled {
+                    background-color: #f8f9fa;
+                    cursor: not-allowed;
+                }
+            }
+
+            .form-textarea {
+                resize: vertical;
+                min-height: 120px;
+            }
+        }
+
+        .form-actions {
+            margin-bottom: 30px;
+        }
+
+        .notification-templates {
+            border-top: 1px solid #dee2e6;
+            padding-top: 24px;
+
+            h4 {
+                color: #495057;
+                font-size: 1rem;
+                margin-bottom: 16px;
+            }
+
+            .template-buttons {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+
+                .btn-outline {
+                    background: white;
+                    border: 2px solid #007bff;
+                    color: #007bff;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    font-size: 0.85rem;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+
+                    &:hover {
+                        background-color: #007bff;
+                        color: white;
+                    }
+
+                    &:disabled {
+                        opacity: 0.6;
+                        cursor: not-allowed;
+                    }
+                }
+            }
+        }
+    }
+
+    .success-message {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 12px 16px;
+        border-radius: 6px;
+        border: 1px solid #c3e6cb;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+    }
+
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 12px 16px;
+        border-radius: 6px;
+        border: 1px solid #f5c6cb;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+
+        &.btn-primary {
+            background-color: #007bff;
+            color: white;
+
+            &:hover {
+                background-color: #0056b3;
+                transform: translateY(-1px);
+            }
+
+            &:disabled {
+                background-color: #6c757d;
+                cursor: not-allowed;
+                transform: none;
+            }
+        }
+
+        &.btn-secondary {
+            background-color: #6c757d;
+            color: white;
+
+            &:hover {
+                background-color: #545b62;
+            }
+        }
+
+        &.btn-danger {
+            background-color: #dc3545;
+            color: white;
+
+            &:hover {
+                background-color: #c82333;
+            }
+        }
+
+        &.btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+    }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    .not-found,
+    .error-container {
+        text-align: center;
+        padding: 60px 20px;
+
+        h2 {
+            color: #dc3545;
+            margin-bottom: 16px;
+        }
+
+        p {
+            color: #6c757d;
+            margin-bottom: 24px;
+        }
+    }
+}
+
+// Modal styles for clinic details
+.modal-form {
+    .form-group {
+        margin-bottom: 16px;
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+
+            &:focus {
+                outline: none;
+                border-color: #007bff;
+                box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+            }
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid #dee2e6;
+    }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+    .clinic-details-page {
+        padding: 15px;
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .tabs {
+            flex-direction: column;
+
+            .tab {
+                text-align: left;
+            }
+        }
+
+        .dashboard-grid {
+            &.grid-col-6 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .branches-stats .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .notification-form .template-buttons {
+            flex-direction: column;
+
+            .btn-outline {
+                text-align: left;
+            }
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .clinic-details-page {
+        padding: 10px;
+
+        .clinic-header {
+            padding: 16px;
+
+            .clinic-info h1 {
+                font-size: 1.5rem;
+            }
+
+            .clinic-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+
+        .tab-content {
+            padding: 16px;
+        }
+
+        .dashboard-card .card-body {
+            padding: 16px;
+        }
+    }
+}

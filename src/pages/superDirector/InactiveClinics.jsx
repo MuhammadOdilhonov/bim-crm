@@ -17,6 +17,7 @@ const InactiveClinics = () => {
     const [showAddDaysModal, setShowAddDaysModal] = useState(false)
     const [selectedClinic, setSelectedClinic] = useState(null)
     const [selectedDays, setSelectedDays] = useState(1)
+    const [selectedComment, setSelectedComment] = useState("")
     const [addingDays, setAddingDays] = useState(false)
 
     // Day options
@@ -54,6 +55,7 @@ const InactiveClinics = () => {
     const handleAddDays = (clinic) => {
         setSelectedClinic(clinic)
         setSelectedDays(1)
+        setSelectedComment("Direktor tomonidan ogohlantirish va qo'shimcha vaqt berildi.")
         setShowAddDaysModal(true)
     }
 
@@ -62,13 +64,14 @@ const InactiveClinics = () => {
 
         try {
             setAddingDays(true)
-            await addDaysToClinic(selectedClinic.id, selectedDays)
+            await addDaysToClinic(selectedClinic.id, selectedDays, selectedComment)
 
             // Refresh the list
             await fetchInactiveClinics()
 
             setShowAddDaysModal(false)
             setSelectedClinic(null)
+            setSelectedComment("")
             alert("Muvaffaqiyatli! Klinikaga qo'shimcha kunlar berildi.")
         } catch (err) {
             console.error("Error adding days:", err)
@@ -205,6 +208,17 @@ const InactiveClinics = () => {
                                 </option>
                             ))}
                         </select>
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="comment-input">Izoh:</label>
+                        <textarea
+                            id="comment-input"
+                            className="form-control"
+                            value={selectedComment}
+                            onChange={(e) => setSelectedComment(e.target.value)}
+                            rows="3"
+                        />
                     </div>
 
                     <div className="modal-actions">

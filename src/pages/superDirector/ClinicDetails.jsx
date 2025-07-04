@@ -11,6 +11,7 @@ import {
     getClinicSubscriptionHistory,
     updateClinicDetails,
     deleteClinic,
+    notifyClinic,
 } from "../../api/apiClinics"
 import Modal from "../../components/Modal"
 import Pagination from "../../components/Pagination"
@@ -37,6 +38,12 @@ const ClinicDetails = () => {
     const [subscriptionHistoryPage, setSubscriptionHistoryPage] = useState(0)
     const [subscriptionHistoryPerPage] = useState(5)
     const [subscriptionHistoryLoading, setSubscriptionHistoryLoading] = useState(false)
+
+    // Notification states
+    const [notificationTitle, setNotificationTitle] = useState("")
+    const [notificationMessage, setNotificationMessage] = useState("")
+    const [sendingNotification, setSendingNotification] = useState(false)
+    const [notificationSuccess, setNotificationSuccess] = useState(false)
 
     useEffect(() => {
         fetchClinicData()
@@ -179,6 +186,37 @@ const ClinicDetails = () => {
         setSubscriptionHistoryPage(selectedPage)
     }
 
+    const handleSendNotification = async () => {
+        if (!notificationTitle.trim() || !notificationMessage.trim()) {
+            setError("Sarlavha va xabar maydoni to'ldirilishi shart")
+            return
+        }
+
+        setSendingNotification(true)
+        setError(null)
+
+        try {
+            const result = await notifyClinic(id, {
+                title: notificationTitle,
+                message: notificationMessage,
+            })
+
+            if (result.success) {
+                setNotificationSuccess(true)
+                setNotificationTitle("")
+                setNotificationMessage("")
+                setTimeout(() => setNotificationSuccess(false), 3000)
+            } else {
+                setError(result.error)
+            }
+        } catch (err) {
+            console.error("Error sending notification:", err)
+            setError("Xabar yuborishda xatolik yuz berdi. Qaytadan urinib ko'ring.")
+        } finally {
+            setSendingNotification(false)
+        }
+    }
+
     if (loading) {
         return <div className="loading">Ma'lumotlar yuklanmoqda...</div>
     }
@@ -249,6 +287,12 @@ const ClinicDetails = () => {
                     onClick={() => handleTabChange("branches")}
                 >
                     Filiallar
+                </button>
+                <button
+                    className={`tab ${activeTab === "notification" ? "active" : ""}`}
+                    onClick={() => handleTabChange("notification")}
+                >
+                    Xabar yuborish
                 </button>
             </div>
 
@@ -608,6 +652,102 @@ const ClinicDetails = () => {
                                 </div>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {activeTab === "notification" && (
+                    <div className="dashboard-grid">
+                        <div className="grid-col-12">
+                            <div className="dashboard-card">
+                                <div className="card-header">
+                                    <h2>Klinikaga xabar yuborish</h2>
+                                </div>
+                                <div className="card-body">
+                                    {error && <div className="error-message">{error}</div>}
+                                    {notificationSuccess && <div className="success-message">Xabar muvaffaqiyatli yuborildi!</div>}
+
+                                    <div className="notification-form">
+                                        <div className="form-group">
+                                            <label htmlFor="notification-title">Xabar sarlavhasi</label>
+                                            <input
+                                                type="text"
+                                                id="notification-title"
+                                                value={notificationTitle}
+                                                onChange={(e) => setNotificationTitle(e.target.value)}
+                                                placeholder="Masalan: Ogohlantirish"
+                                                className="form-input"
+                                                disabled={sendingNotification}
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label htmlFor="notification-message">Xabar matni</label>
+                                            <textarea
+                                                id="notification-message"
+                                                value={notificationMessage}
+                                                onChange={(e) => setNotificationMessage(e.target.value)}
+                                                placeholder="Klinikangiz faol emasligi sababli ogohlantirilasiz..."
+                                                className="form-textarea"
+                                                rows={6}
+                                                disabled={sendingNotification}
+                                            />
+                                        </div>
+
+                                        <div className="form-actions">
+                                            <button
+                                                className="btn btn-primary"
+                                                onClick={handleSendNotification}
+                                                disabled={sendingNotification || !notificationTitle.trim() || !notificationMessage.trim()}
+                                            >
+                                                {sendingNotification ? "Yuborilmoqda..." : "Xabar yuborish"}
+                                            </button>
+                                        </div>
+
+                                        <div className="notification-templates">
+                                            <h4>Tayyor shablonlar:</h4>
+                                            <div className="template-buttons">
+                                                <button
+                                                    className="btn btn-outline"
+                                                    onClick={() => {
+                                                        setNotificationTitle("Ogohlantirish")
+                                                        setNotificationMessage(
+                                                            "Klinikangiz faol emasligi sababli ogohlantirilasiz. Iltimos, tizimga kiring va faoliyatingizni davom ettiring.",
+                                                        )
+                                                    }}
+                                                    disabled={sendingNotification}
+                                                >
+                                                    Faolsizlik ogohlantirishi
+                                                </button>
+                                                <button
+                                                    className="btn btn-outline"
+                                                    onClick={() => {
+                                                        setNotificationTitle("To'lov eslatmasi")
+                                                        setNotificationMessage(
+                                                            "Obuna to'lovingiz muddati yaqinlashmoqda. Iltimos, to'lovni amalga oshiring.",
+                                                        )
+                                                    }}
+                                                    disabled={sendingNotification}
+                                                >
+                                                    To'lov eslatmasi
+                                                </button>
+                                                <button
+                                                    className="btn btn-outline"
+                                                    onClick={() => {
+                                                        setNotificationTitle("Yangilanish xabari")
+                                                        setNotificationMessage(
+                                                            "Tizimda yangi funksiyalar qo'shildi. Batafsil ma'lumot uchun tizimga kiring.",
+                                                        )
+                                                    }}
+                                                    disabled={sendingNotification}
+                                                >
+                                                    Yangilanish xabari
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

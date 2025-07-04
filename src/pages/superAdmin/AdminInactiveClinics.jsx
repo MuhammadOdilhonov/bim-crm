@@ -17,6 +17,7 @@ const AdminInactiveClinics = () => {
     const [showAddDaysModal, setShowAddDaysModal] = useState(false)
     const [selectedClinic, setSelectedClinic] = useState(null)
     const [selectedDays, setSelectedDays] = useState(1)
+    const [selectedComment, setSelectedComment] = useState("")
     const [addingDays, setAddingDays] = useState(false)
 
     // Day options
@@ -54,6 +55,7 @@ const AdminInactiveClinics = () => {
     const handleAddDays = (clinic) => {
         setSelectedClinic(clinic)
         setSelectedDays(1)
+        setSelectedComment("Superadmin tomonidan ogohlantirish va qo'shimcha vaqt berildi.")
         setShowAddDaysModal(true)
     }
 
@@ -62,13 +64,14 @@ const AdminInactiveClinics = () => {
 
         try {
             setAddingDays(true)
-            await addDaysToClinic(selectedClinic.id, selectedDays)
+            await addDaysToClinic(selectedClinic.id, selectedDays, selectedComment)
 
             // Refresh the list
             await fetchInactiveClinics()
 
             setShowAddDaysModal(false)
             setSelectedClinic(null)
+            setSelectedComment("")
             alert("Muvaffaqiyatli! Klinikaga qo'shimcha kunlar berildi.")
         } catch (err) {
             console.error("Error adding days:", err)
@@ -153,7 +156,10 @@ const AdminInactiveClinics = () => {
                                         <td>{clinic.clinic_email}</td>
                                         <td>{formatDate(clinic.since)}</td>
                                         <td>
-                                            <span className={`status-badge ${getStatusBadge(clinic.inactive_days)}`}>
+                                            <span
+                                                className={`status-badge ${getStatusBadge(clinic.inactive_days)}`}
+                                                title={clinic.last_extension_comment || "Izoh mavjud emas"}
+                                            >
                                                 {clinic.inactive_days} kun
                                             </span>
                                         </td>
@@ -209,6 +215,18 @@ const AdminInactiveClinics = () => {
                                 </option>
                             ))}
                         </select>
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="comment-input">Izoh (ixtiyoriy):</label>
+                        <textarea
+                            id="comment-input"
+                            value={selectedComment}
+                            onChange={(e) => setSelectedComment(e.target.value)}
+                            className="form-textarea"
+                            placeholder="Nima sababdan qo'shimcha vaqt berilayotganini yozing..."
+                            rows={3}
+                        />
                     </div>
 
                     <div className="modal-actions">

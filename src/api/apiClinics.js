@@ -238,3 +238,22 @@ export const createClinicWithImage = async (clinicData) => {
         }
     }
 }
+
+// Send notification to clinic
+export const notifyClinic = async (clinicId, notificationData) => {
+    try {
+        const response = await client.post(`admin/clinics/${clinicId}/notify/`, notificationData)
+
+        console.log("API response - notifyClinic:", response.data)
+        return {
+            success: true,
+            data: response.data,
+        }
+    } catch (error) {
+        console.error("Error sending notification to clinic:", error.response?.data || error.message)
+        return {
+            success: false,
+            error: error.response?.data?.error || "Failed to send notification to clinic",
+        }
+    }
+}

@@ -150,6 +150,8 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        cursor: help;
+        position: relative;
 
         &.status-warning {
             background-color: #fff3cd;
@@ -168,6 +170,34 @@
             color: #0c5460;
             border: 1px solid #bee5eb;
             animation: pulse 2s infinite;
+        }
+
+        // Tooltip styles
+        &:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
+        }
+
+        &:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #333;
+            z-index: 1000;
         }
     }
 
@@ -290,7 +320,8 @@
             color: #495057;
         }
 
-        .form-select {
+        .form-select,
+        .form-textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #dee2e6;
@@ -304,6 +335,12 @@
                 border-color: #007bff;
                 box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
             }
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
         }
     }
 

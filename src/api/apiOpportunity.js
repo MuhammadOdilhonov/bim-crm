@@ -12,10 +12,11 @@ export const getInactiveClinics = async (page = 1, pageSize = 10) => {
 }
 
 // Add days to inactive clinic
-export const addDaysToClinic = async (clinicId, days) => {
+export const addDaysToClinic = async (clinicId, days, comment = "") => {
     try {
         const response = await client.post(`/admin/inactive-clinics/${clinicId}/add_days/`, {
             days: days,
+            comment: comment,
         })
         return response.data
     } catch (error) {
