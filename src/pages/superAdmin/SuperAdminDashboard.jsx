@@ -14,6 +14,7 @@ const SuperAdminDashboard = () => {
 
     const routes = [
         { name: "Mijoz so'rovlari", path: "/super-admin", icon: "📨" },
+        { name: "Lid instagaram", path: "/super-admin/instagram", icon: "📨" },
         { name: "Klinikalar", path: "/super-admin/clinics", icon: "🏥" },
         { name: "Tariflar", path: "/super-admin/tariffs", icon: "💰" },
         { path: "/super-admin/inactive-clinics", name: "Nofaol klinikalar", icon: "⏸️"},

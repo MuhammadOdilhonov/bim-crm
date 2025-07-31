@@ -18,6 +18,8 @@ import AdminClinics from "./pages/superAdmin/AdminClinics"
 import AdminTariffs from "./pages/superAdmin/AdminTariffs"
 import AdminInactiveClinics from "./pages/superAdmin/AdminInactiveClinics"
 import InactiveClinics from "./pages/superDirector/InactiveClinics"
+import Instagram from "./pages/superDirector/Instagram"
+import AdminInstagram from "./pages/superAdmin/AdminInstagram"
 
 function App() {
   return (
@@ -43,6 +45,7 @@ function App() {
               <Route path="api-issues" element={<ApiIssues />} />
               <Route path="tariffs" element={<Tariffs />} />
               <Route path="inactive-clinics" element={<InactiveClinics />} />
+              <Route path="instagram" element={<Instagram />} />
             </Route>
 
             {/* SuperAdmin Routes */}
@@ -58,6 +61,7 @@ function App() {
               <Route path="clinics" element={<AdminClinics />} />
               <Route path="tariffs" element={<AdminTariffs />} />
               <Route path="inactive-clinics" element={<AdminInactiveClinics />} />
+              <Route path="instagram" element={<AdminInstagram />} />
             </Route>
 
             <Route path="/" element={<Navigate to="/login" />} />
