@@ -30,8 +30,10 @@ const Instagram = () => {
     const [stats, setStats] = useState({
         total: 0,
         aloqada: 0,
-        kutilmoqda: 0,
         mijozga_aylandi: 0,
+        rad_etildi: 0,
+        raqam_xato: 0,
+        telefon_kotarmadi: 0,
     })
 
     // Modal states
@@ -43,15 +45,15 @@ const Instagram = () => {
 
     // Status options
     const statusOptions = [
-        { value: "yangi", label: "Yangi" },
-        { value: "kutilmoqda", label: "Kutilmoqda" },
-        { value: "aloqada", label: "Aloqada" },
-        { value: "mijozga_aylandi", label: "Mijozga aylandi" },
-        { value: "rad_etildi", label: "Rad etildi" },
-        { value: "telefon_kotarmadi", label: "Telefon ko'tarmadi" },
-        { value: "keyinroq_qilish", label: "Keyinroq telefon qilishni so'radi" },
-        { value: "maslahatlashadi", label: "Maslahatlashadi" },
-        { value: "raqam_xato", label: "Raqam xato" },
+        { value: "yangi", label: "Yangi", color: "#3b82f6", icon: "🆕" },
+        { value: "kutilmoqda", label: "Kutilmoqda", color: "#f59e0b", icon: "⏳" },
+        { value: "aloqada", label: "Aloqada", color: "#10b981", icon: "📞" },
+        { value: "mijozga_aylandi", label: "Mijozga aylandi", color: "#059669", icon: "✅" },
+        { value: "rad_etildi", label: "Rad etildi", color: "#ef4444", icon: "❌" },
+        { value: "telefon_kotarmadi", label: "Telefon ko'tarmadi", color: "#f97316", icon: "📵" },
+        { value: "keyinroq_qilish", label: "Keyinroq telefon qilishni so'radi", color: "#8b5cf6", icon: "🔄" },
+        { value: "maslahatlashadi", label: "Maslahatlashadi", color: "#06b6d4", icon: "💬" },
+        { value: "raqam_xato", label: "Raqam xato", color: "#dc2626", icon: "🚫" },
     ]
 
     useEffect(() => {
@@ -196,6 +198,11 @@ const Instagram = () => {
         return statusOption ? statusOption.label : status
     }
 
+    const getStatusIcon = (status) => {
+        const statusOption = statusOptions.find((option) => option.value === status)
+        return statusOption ? statusOption.icon : "📝"
+    }
+
     const getStatusClass = (status) => {
         const statusClasses = {
             yangi: "new",
@@ -222,73 +229,111 @@ const Instagram = () => {
         )
     }
 
+    const statsData = [
+        {
+            key: "total",
+            title: "Jami lidlar",
+            value: stats.total,
+            icon: "👥",
+            color: "#6366f1",
+            description: "Barcha vaqt",
+        },
+        {
+            key: "aloqada",
+            title: "Aloqada",
+            value: stats.aloqada,
+            icon: "📞",
+            color: "#10b981",
+            description: stats.total > 0 ? `${Math.round((stats.aloqada / stats.total) * 100)}%` : "0%",
+        },
+        {
+            key: "mijozga_aylandi",
+            title: "Mijozga aylandi",
+            value: stats.mijozga_aylandi,
+            icon: "✅",
+            color: "#059669",
+            description: stats.total > 0 ? `${Math.round((stats.mijozga_aylandi / stats.total) * 100)}%` : "0%",
+        },
+        {
+            key: "rad_etildi",
+            title: "Rad etildi",
+            value: stats.rad_etildi,
+            icon: "❌",
+            color: "#ef4444",
+            description: stats.total > 0 ? `${Math.round((stats.rad_etildi / stats.total) * 100)}%` : "0%",
+        },
+        {
+            key: "telefon_kotarmadi",
+            title: "Telefon ko'tarmadi",
+            value: stats.telefon_kotarmadi,
+            icon: "📵",
+            color: "#f97316",
+            description: stats.total > 0 ? `${Math.round((stats.telefon_kotarmadi / stats.total) * 100)}%` : "0%",
+        },
+        {
+            key: "raqam_xato",
+            title: "Raqam xato",
+            value: stats.raqam_xato,
+            icon: "🚫",
+            color: "#dc2626",
+            description: stats.total > 0 ? `${Math.round((stats.raqam_xato / stats.total) * 100)}%` : "0%",
+        },
+    ]
+
     return (
         <div className="instagram-page">
             <div className="page-header">
-                <h1>Instagram Lidlar</h1>
-                <p>Instagram orqali kelgan potensial mijozlar</p>
+                <div className="header-content">
+                    <div className="header-text">
+                        <h1>Instagram Lidlar</h1>
+                        <p>Instagram orqali kelgan potensial mijozlar bilan ishlash</p>
+                    </div>
+                    <div className="header-actions">
+                        <button onClick={fetchTargets} className="btn btn-primary" disabled={loading}>
+                            {loading ? "Yuklanmoqda..." : "🔄 Yangilash"}
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {error && (
                 <div className="error-message">
-                    <p>{error}</p>
+                    <div className="error-content">
+                        <span className="error-icon">⚠️</span>
+                        <p>{error}</p>
+                    </div>
                     <button onClick={() => setError("")} className="close-error">
                         ×
                     </button>
                 </div>
             )}
 
-            {/* Statistics Cards */}
+            {/* Enhanced Statistics Cards */}
             <div className="stats-grid">
-                <div className="stats-card total">
-                    <div className="stats-icon">
-                        <span>👥</span>
-                    </div>
-                    <div className="stats-info">
-                        <h3 className="stats-title">Jami lidlar</h3>
-                        <p className="stats-value">{stats.total}</p>
-                        <div className="stats-change">Barcha vaqt</div>
-                    </div>
-                </div>
-                <div className="stats-card contacted">
-                    <div className="stats-icon">
-                        <span>📞</span>
-                    </div>
-                    <div className="stats-info">
-                        <h3 className="stats-title">Aloqada</h3>
-                        <p className="stats-value">{stats.aloqada}</p>
-                        <div className="stats-change positive">
-                            {stats.total > 0 ? Math.round((stats.aloqada / stats.total) * 100) : 0}%
+                {statsData.map((stat) => (
+                    <div key={stat.key} className={`stats-card ${stat.key}`}>
+                        <div className="stats-icon" style={{ backgroundColor: stat.color }}>
+                            <span>{stat.icon}</span>
+                        </div>
+                        <div className="stats-info">
+                            <h3 className="stats-title">{stat.title}</h3>
+                            <p className="stats-value">{stat.value}</p>
+                            <div className={`stats-change ${stat.key === "total" ? "" : "positive"}`}>{stat.description}</div>
+                        </div>
+                        <div className="stats-progress">
+                            <div
+                                className="progress-bar"
+                                style={{
+                                    width: stat.key === "total" ? "100%" : `${stats.total > 0 ? (stat.value / stats.total) * 100 : 0}%`,
+                                    backgroundColor: stat.color,
+                                }}
+                            ></div>
                         </div>
                     </div>
-                </div>
-                <div className="stats-card pending">
-                    <div className="stats-icon">
-                        <span>⏳</span>
-                    </div>
-                    <div className="stats-info">
-                        <h3 className="stats-title">Kutilmoqda</h3>
-                        <p className="stats-value">{stats.kutilmoqda}</p>
-                        <div className="stats-change">
-                            {stats.total > 0 ? Math.round((stats.kutilmoqda / stats.total) * 100) : 0}%
-                        </div>
-                    </div>
-                </div>
-                <div className="stats-card converted">
-                    <div className="stats-icon">
-                        <span>✅</span>
-                    </div>
-                    <div className="stats-info">
-                        <h3 className="stats-title">Mijozga aylandi</h3>
-                        <p className="stats-value">{stats.mijozga_aylandi}</p>
-                        <div className="stats-change positive">
-                            {stats.total > 0 ? Math.round((stats.mijozga_aylandi / stats.total) * 100) : 0}%
-                        </div>
-                    </div>
-                </div>
+                ))}
             </div>
 
-            {/* Filters */}
+            {/* Advanced Filters */}
             <div className="filters-section">
                 <div className="filters">
                     <div className="search-box">
@@ -302,30 +347,29 @@ const Instagram = () => {
                     </div>
                     <div className="location-filter">
                         <select value={selectedLocation} onChange={handleLocationFilter}>
-                            <option value="">Barcha hududlar</option>
-                            <option value="">Hududni tanlang</option>
-                            <option value="Toshkent">Toshkent</option>
-                            <option value="Toshkent viloyati">Toshkent viloyati</option>
-                            <option value="Samarqand">Samarqand</option>
-                            <option value="Buxoro">Buxoro</option>
-                            <option value="Andijon">Andijon</option>
-                            <option value="Farg'ona">Farg'ona</option>
-                            <option value="Namangan">Namangan</option>
-                            <option value="Qashqadaryo">Qashqadaryo</option>
-                            <option value="Surxondaryo">Surxondaryo</option>
-                            <option value="Jizzax">Jizzax</option>
-                            <option value="Sirdaryo">Sirdaryo</option>
-                            <option value="Navoiy">Navoiy</option>
-                            <option value="Xorazm">Xorazm</option>
-                            <option value="Qoraqalpog'iston">Qoraqalpog'iston</option>
+                            <option value="">📍 Barcha hududlar</option>
+                            <option value="Toshkent">📍 Toshkent</option>
+                            <option value="Toshkent viloyati">📍 Toshkent viloyati</option>
+                            <option value="Samarqand">📍 Samarqand</option>
+                            <option value="Buxoro">📍 Buxoro</option>
+                            <option value="Andijon">📍 Andijon</option>
+                            <option value="Farg'ona">📍 Farg'ona</option>
+                            <option value="Namangan">📍 Namangan</option>
+                            <option value="Qashqadaryo">📍 Qashqadaryo</option>
+                            <option value="Surxondaryo">📍 Surxondaryo</option>
+                            <option value="Jizzax">📍 Jizzax</option>
+                            <option value="Sirdaryo">📍 Sirdaryo</option>
+                            <option value="Navoiy">📍 Navoiy</option>
+                            <option value="Xorazm">📍 Xorazm</option>
+                            <option value="Qoraqalpog'iston">📍 Qoraqalpog'iston</option>
                         </select>
                     </div>
                     <div className="status-filter">
                         <select value={selectedStatus} onChange={handleStatusFilter}>
-                            <option value="">Barcha holatlar</option>
+                            <option value="">📊 Barcha holatlar</option>
                             {statusOptions.map((status) => (
                                 <option key={status.value} value={status.value}>
-                                    {status.label}
+                                    {status.icon} {status.label}
                                 </option>
                             ))}
                         </select>
@@ -340,7 +384,7 @@ const Instagram = () => {
                             }}
                             className="btn btn-secondary btn-sm"
                         >
-                            Tozalash
+                            🗑️ Tozalash
                         </button>
                     </div>
                 </div>
@@ -349,12 +393,9 @@ const Instagram = () => {
             {/* Targets Table */}
             <div className="dashboard-card">
                 <div className="card-header">
-                    <h2>Lidlar ro'yxati</h2>
+                    <h2>📋 Lidlar ro'yxati</h2>
                     <div className="card-actions">
                         <span className="results-count">Jami: {totalItems} ta natija</span>
-                        <button onClick={fetchTargets} className="btn btn-sm btn-secondary" disabled={loading}>
-                            {loading ? "Yuklanmoqda..." : "Yangilash"}
-                        </button>
                     </div>
                 </div>
                 <div className="card-body">
@@ -369,13 +410,13 @@ const Instagram = () => {
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Mijoz ma'lumotlari</th>
-                                        <th>Hudud</th>
-                                        <th>Klinika nomi</th>
-                                        <th>Holat</th>
-                                        <th>Sana</th>
-                                        <th>Izoh</th>
-                                        <th>Amallar</th>
+                                        <th>👤 Mijoz ma'lumotlari</th>
+                                        <th>📍 Hudud</th>
+                                        <th>🏥 Klinika nomi</th>
+                                        <th>📊 Holat</th>
+                                        <th>📅 Sana</th>
+                                        <th>💬 Izoh</th>
+                                        <th>⚙️ Amallar</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -383,21 +424,26 @@ const Instagram = () => {
                                         <tr key={target.id}>
                                             <td>
                                                 <div className="customer-info">
-                                                    <div className="customer-name">
-                                                        <strong>{target.name}</strong>
+                                                    <div className="customer-avatar">
+                                                        <span>{target.name.charAt(0).toUpperCase()}</span>
                                                     </div>
-                                                    <div className="customer-phone">
-                                                        <a href={`tel:${target.phone_number}`} className="phone-link">
-                                                            {target.phone_number}
-                                                        </a>
+                                                    <div className="customer-details">
+                                                        <div className="customer-name">
+                                                            <strong>{target.name}</strong>
+                                                        </div>
+                                                        <div className="customer-phone">
+                                                            <a href={`tel:${target.phone_number}`} className="phone-link">
+                                                                📞 {target.phone_number}
+                                                            </a>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
-                                                <span className="location-badge">{target.location}</span>
+                                                <span className="location-badge">📍 {target.location}</span>
                                             </td>
                                             <td>
-                                                <div className="clinic-info">{target.clinic_name}</div>
+                                                <div className="clinic-info">🏥 {target.clinic_name}</div>
                                             </td>
                                             <td>
                                                 <select
@@ -408,15 +454,18 @@ const Instagram = () => {
                                                 >
                                                     {statusOptions.map((status) => (
                                                         <option key={status.value} value={status.value}>
-                                                            {status.label}
+                                                           {status.icon} {status.label}
                                                         </option>
                                                     ))}
                                                 </select>
                                             </td>
                                             <td>
                                                 <div className="date-info">
-                                                    <div className="date-primary">{new Date(target.created_at).toLocaleDateString("uz-UZ")}</div>
+                                                    <div className="date-primary">
+                                                        📅 {new Date(target.created_at).toLocaleDateString("uz-UZ")}
+                                                    </div>
                                                     <div className="date-secondary">
+                                                        🕐{" "}
                                                         {new Date(target.created_at).toLocaleTimeString("uz-UZ", {
                                                             hour: "2-digit",
                                                             minute: "2-digit",
@@ -434,7 +483,7 @@ const Instagram = () => {
                                                             </span>
                                                         </div>
                                                     ) : (
-                                                        <span className="no-comment">Izoh yo'q</span>
+                                                        <span className="no-comment">💭 Izoh yo'q</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -483,25 +532,33 @@ const Instagram = () => {
                     setComment("")
                     setSelectedTarget(null)
                 }}
-                title="Izoh qo'shish"
+                title="💬 Izoh qo'shish"
             >
                 <div className="comment-modal">
                     {selectedTarget && (
                         <div className="target-info">
-                            <h4>{selectedTarget.name}</h4>
-                            <p>{selectedTarget.phone_number}</p>
-                            <p>
-                                {selectedTarget.location} - {selectedTarget.clinic_name}
-                            </p>
-                            <div className="current-status">
-                                <span className={`status-badge ${getStatusClass(selectedTarget.status || "yangi")}`}>
-                                    {getStatusLabel(selectedTarget.status || "yangi")}
-                                </span>
+                            <div className="target-card">
+                                <div className="target-avatar">
+                                    <span>{selectedTarget.name.charAt(0).toUpperCase()}</span>
+                                </div>
+                                <div className="target-details">
+                                    <h4>👤 {selectedTarget.name}</h4>
+                                    <p>📞 {selectedTarget.phone_number}</p>
+                                    <p>
+                                        📍 {selectedTarget.location} - 🏥 {selectedTarget.clinic_name}
+                                    </p>
+                                    <div className="current-status">
+                                        <span className={`status-badge ${getStatusClass(selectedTarget.status || "yangi")}`}>
+                                            {getStatusIcon(selectedTarget.status || "yangi")}{" "}
+                                            {getStatusLabel(selectedTarget.status || "yangi")}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
                     <div className="form-group">
-                        <label htmlFor="comment">Izoh:</label>
+                        <label htmlFor="comment">📝 Izoh:</label>
                         <textarea
                             id="comment"
                             value={comment}
@@ -522,10 +579,10 @@ const Instagram = () => {
                             className="btn btn-secondary"
                             disabled={actionLoading}
                         >
-                            Bekor qilish
+                            ❌ Bekor qilish
                         </button>
                         <button onClick={handleAddComment} className="btn btn-primary" disabled={actionLoading || !comment.trim()}>
-                            {actionLoading ? "Saqlanmoqda..." : "Saqlash"}
+                            {actionLoading ? "⏳ Saqlanmoqda..." : "💾 Saqlash"}
                         </button>
                     </div>
                 </div>
@@ -538,7 +595,7 @@ const Instagram = () => {
                     setShowDeleteModal(false)
                     setSelectedTarget(null)
                 }}
-                title="Lidni o'chirish"
+                title="🗑️ Lidni o'chirish"
             >
                 <div className="delete-modal">
                     {selectedTarget && (
@@ -546,30 +603,30 @@ const Instagram = () => {
                             <div className="warning-icon">⚠️</div>
                             <h3>Lidni o'chirishni tasdiqlang</h3>
                             <p>
-                                <strong>{selectedTarget.name}</strong> lidini butunlay o'chirishni xohlaysizmi?
+                                <strong>👤 {selectedTarget.name}</strong> lidini butunlay o'chirishni xohlaysizmi?
                             </p>
                             <div className="target-summary">
                                 <div className="summary-item">
-                                    <span>Telefon:</span>
+                                    <span>📞 Telefon:</span>
                                     <span>{selectedTarget.phone_number}</span>
                                 </div>
                                 <div className="summary-item">
-                                    <span>Hudud:</span>
+                                    <span>📍 Hudud:</span>
                                     <span>{selectedTarget.location}</span>
                                 </div>
                                 <div className="summary-item">
-                                    <span>Klinika:</span>
+                                    <span>🏥 Klinika:</span>
                                     <span>{selectedTarget.clinic_name}</span>
                                 </div>
                                 <div className="summary-item">
-                                    <span>Holat:</span>
+                                    <span>📊 Holat:</span>
                                     <span className={`status-badge ${getStatusClass(selectedTarget.status || "yangi")}`}>
-                                        {getStatusLabel(selectedTarget.status || "yangi")}
+                                        {getStatusIcon(selectedTarget.status || "yangi")} {getStatusLabel(selectedTarget.status || "yangi")}
                                     </span>
                                 </div>
                             </div>
                             <div className="warning-text">
-                                <strong>Diqqat:</strong> Bu amal qaytarib bo'lmaydi va barcha ma'lumotlar yo'qoladi!
+                                <strong>⚠️ Diqqat:</strong> Bu amal qaytarib bo'lmaydi va barcha ma'lumotlar yo'qoladi!
                             </div>
                         </div>
                     )}
@@ -582,10 +639,10 @@ const Instagram = () => {
                             className="btn btn-secondary"
                             disabled={actionLoading}
                         >
-                            Bekor qilish
+                            ❌ Bekor qilish
                         </button>
                         <button onClick={handleDelete} className="btn btn-danger" disabled={actionLoading}>
-                            {actionLoading ? "O'chirilmoqda..." : "Ha, o'chirish"}
+                            {actionLoading ? "⏳ O'chirilmoqda..." : "🗑️ Ha, o'chirish"}
                         </button>
                     </div>
                 </div>

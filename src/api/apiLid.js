@@ -123,7 +123,7 @@ export const getLocations = async () => {
 // Get target statistics
 export const getTargetStats = async () => {
     try {
-        const response = await client.get("/admin/target/stats/")
+        const response = await client.get("/admin/targets/stats/")
 
         return {
             success: true,
