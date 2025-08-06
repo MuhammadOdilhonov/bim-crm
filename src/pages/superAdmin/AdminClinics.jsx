@@ -108,10 +108,10 @@ const AdminClinics = () => {
                 setNewClinic({
                     clinic_name: "",
                     email: "",
-                    phone: "",
+                    phone_number: "",
                     license_number: "",
                     address: "",
-                    director: "",
+                    name: "",
                     image: null,
                 })
                 setImagePreview(null)
