@@ -66,9 +66,9 @@ const ClinicDetails = () => {
                 setClinic(clinicResult.data)
                 setEditFormData({
                     clinic_name: clinicResult.data.clinic_name,
-                    director: clinicResult.data.director,
+                    name: clinicResult.data.director,
                     address: clinicResult.data.address,
-                    phone: clinicResult.data.phone,
+                    phone_number: clinicResult.data.phone,
                     email: clinicResult.data.email,
                 })
             } else {

@@ -14,10 +14,10 @@ const Clinics = () => {
     const [newClinic, setNewClinic] = useState({
         clinic_name: "",
         email: "",
-        phone: "",
+        phone_number: "",
         license_number: "",
         address: "",
-        director: "",
+        name: "",
         image: null,
     })
     const [currentPage, setCurrentPage] = useState(0)
@@ -85,10 +85,10 @@ const Clinics = () => {
         if (
             !newClinic.clinic_name ||
             !newClinic.email ||
-            !newClinic.phone ||
+            !newClinic.phone_number ||
             !newClinic.license_number ||
             !newClinic.address ||
-            !newClinic.director
+            !newClinic.name
         ) {
             alert("Iltimos, barcha majburiy maydonlarni to'ldiring")
             return
@@ -300,8 +300,8 @@ const Clinics = () => {
                             <input
                                 type="text"
                                 id="director"
-                                name="director"
-                                value={newClinic.director}
+                                name="name"
+                                value={newClinic.name}
                                 onChange={handleInputChange}
                                 required
                             />
@@ -326,8 +326,8 @@ const Clinics = () => {
                             <input
                                 type="text"
                                 id="phone"
-                                name="phone"
-                                value={newClinic.phone}
+                                name="phone_number"
+                                value={newClinic.phone_number}
                                 onChange={handleInputChange}
                                 required
                             />

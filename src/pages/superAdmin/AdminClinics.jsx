@@ -84,10 +84,10 @@ const AdminClinics = () => {
         if (
             !newClinic.clinic_name ||
             !newClinic.email ||
-            !newClinic.phone ||
+            !newClinic.phone_number ||
             !newClinic.license_number ||
             !newClinic.address ||
-            !newClinic.director
+            !newClinic.name
         ) {
             alert("Iltimos, barcha majburiy maydonlarni to'ldiring")
             return
@@ -297,8 +297,8 @@ const AdminClinics = () => {
                             <input
                                 type="text"
                                 id="director"
-                                name="director"
-                                value={newClinic.director}
+                                name="name"
+                                value={newClinic.name}
                                 onChange={handleInputChange}
                                 required
                             />
@@ -323,8 +323,8 @@ const AdminClinics = () => {
                             <input
                                 type="text"
                                 id="phone"
-                                name="phone"
-                                value={newClinic.phone}
+                                name="phone_number"
+                                value={newClinic.phone_number}
                                 onChange={handleInputChange}
                                 required
                             />
